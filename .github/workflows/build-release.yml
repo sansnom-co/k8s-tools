@@ -1,0 +1,232 @@
+name: Build, Scan, Package, Sign, and Release K8s Tools
+
+on:
+  push:
+    branches:
+      - main # Trigger on push to main for development builds
+    tags:
+      - 'v*' # Trigger on new tags (e.g., v24.07.0-alpha)
+
+jobs:
+  # Job 1: Build Statically Linked Binaries
+  build_binaries:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.set_version.outputs.version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Build Environment (CalVer)
+        id: set_version
+        run: |
+          # Get current date for CalVer (YY.MM)
+          DATE_VERSION=$(date +'%y.%m')
+          # Get patch number (e.g., from CI run number or a fixed value)
+          # For simplicity, using a fixed '0' for patch, or you could use GITHUB_RUN_NUMBER
+          PATCH_VERSION="0"
+
+          # If it's a tag, use the tag name as the version (e.g., v24.07.0-alpha -> 24.07.0-alpha)
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            VERSION="${{ github.ref_name }}"
+          else
+            # For main branch builds, use CalVer + run number as patch + 'dev' tag
+            VERSION="${DATE_VERSION}.${GITHUB_RUN_NUMBER}-dev"
+          fi
+          echo "Calculated Version: $VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Install build prerequisites
+        run: |
+          sudo apt update
+          sudo apt install -y git golang build-essential pkg-config libc6-dev libgpgme-dev libdevmapper-dev libbtrfs-dev libseccomp-dev libassuan-dev libgpg-error-dev libpcsclite-dev musl-tools musl-dev
+
+      - name: Make build script executable
+        run: chmod +x ./build_static_tools.sh
+
+      - name: Run static binary build script
+        run: ./build_static_tools.sh
+
+      - name: Upload static binaries artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: static-binaries
+          path: static_binaries/
+
+  # Job 2: Scan Binaries with Trivy
+  scan_binaries:
+    runs-on: ubuntu-latest
+    needs: build_binaries # Depends on build_binaries job
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download static binaries artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: static-binaries
+          path: static_binaries/
+
+      - name: Install Trivy
+        run: |
+          sudo apt-get install -y wget apt-transport-https gnupg
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | gpg --dearmor | sudo tee /usr/share/keyrings/trivy.gpg > /dev/null
+          echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb stable main" | sudo tee /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update
+          sudo apt-get install -y trivy
+
+      - name: Run Trivy scan on binaries
+        run: |
+          trivy fs --format table --severity HIGH,CRITICAL static_binaries/ > trivy-scan-results.txt
+          cat trivy-scan-results.txt # Display results in logs
+
+      - name: Upload Trivy scan results
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-scan-results
+          path: trivy-scan-results.txt
+
+  # Job 3: Package .deb and .rpm with FPM
+  package_binaries:
+    runs-on: ubuntu-latest
+    needs: scan_binaries # Depends on scan_binaries job
+    outputs:
+      version: ${{ needs.build_binaries.outputs.version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download static binaries artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: static-binaries
+          path: static_binaries/
+
+      - name: Install Ruby and FPM
+        run: |
+          sudo apt update
+          sudo apt install -y ruby ruby-dev build-essential
+          sudo gem install fpm
+
+      - name: Create packages directory
+        run: mkdir packages
+
+      - name: Create .deb package
+        run: |
+          cd static_binaries/
+          fpm -s dir -t deb \
+              -n k8s-tools \
+              -v ${{ needs.build_binaries.outputs.version }} \
+              --iteration 1 \
+              --architecture amd64 \
+              --description "Statically linked Kubernetes CLI tools (kubectl, helm, jq, skopeo, oras, cosign, flux)" \
+              --prefix /usr/local/bin \
+              --exclude .bitwarden-ssh-agent.sock \
+              .
+          mv *.deb ../packages/ # Move generated deb to packages directory
+          cd ..
+
+      - name: Create .rpm package
+        run: |
+          cd static_binaries/
+          fpm -s dir -t rpm \
+              -n k8s-tools \
+              -v ${{ needs.build_binaries.outputs.version }} \
+              --iteration 1 \
+              --architecture x86_64 \
+              --description "Statically linked Kubernetes CLI tools (kubectl, helm, jq, skopeo, oras, cosign, flux)" \
+              --prefix /usr/local/bin \
+              --exclude .bitwarden-ssh-agent.sock \
+              .
+          mv *.rpm ../packages/ # Move generated rpm to packages directory
+          cd ..
+
+      - name: Upload packages artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: k8s-packages
+          path: packages/
+
+  # Job 4: Sign Packages with GPG
+  sign_packages:
+    runs-on: ubuntu-latest
+    needs: package_binaries # Depends on package_binaries job
+    if: startsWith(github.ref, 'refs/tags/v') # Only run on tags for release signing
+    outputs:
+      version: ${{ needs.package_binaries.outputs.version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download packages artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: k8s-packages
+          path: packages/
+
+      - name: Import GPG key
+        run: |
+          echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
+          # Verify key import (optional, but good for debugging)
+          gpg --list-secret-keys --fingerprint
+
+      - name: Sign .deb and .rpm packages
+        run: |
+          cd packages/
+          for file in *.deb *.rpm; do
+            echo "${{ secrets.GPG_PASSPHRASE }}" | gpg --batch --yes --passphrase-fd 0 --pinentry-mode loopback --detach-sign "$file"
+          done
+          cd ..
+
+      - name: Upload signed packages artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: k8s-signed-packages
+          path: packages/
+
+  # Job 5: Publish to GitHub Releases
+  release:
+    runs-on: ubuntu-latest
+    needs: sign_packages # Depends on sign_packages job
+    if: startsWith(github.ref, 'refs/tags/v') # Only run on tags for releases
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download signed packages artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: k8s-signed-packages
+          path: packages/
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: K8s Tools ${{ needs.sign_packages.outputs.version }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Assets
+        run: |
+          cd packages/
+          for file in *; do
+            # Determine content type (basic guess)
+            if [[ "$file" == *.deb ]]; then
+              CONTENT_TYPE="application/vnd.debian.binary-package"
+            elif [[ "$file" == *.rpm ]]; then
+              CONTENT_TYPE="application/x-rpm"
+            elif [[ "$file" == *.asc ]]; then
+              CONTENT_TYPE="application/pgp-signature"
+            else
+              CONTENT_TYPE="application/octet-stream"
+            fi
+
+            echo "Uploading $file with content type $CONTENT_TYPE"
+            gh release upload ${{ github.ref_name }} "$file" --repo ${{ github.repository }} --clobber --title "${file}" --type "${CONTENT_TYPE}"
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
