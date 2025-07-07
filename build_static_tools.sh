@@ -7,8 +7,8 @@
 set -euo pipefail # Exit immediately if a command exits with a non-zero status.
 
 # --- Configuration ---
-BUILD_ROOT="/tmp/k8s-static-build-$(date +%Y%m%d%H%M%S)" # Unique temporary build directory
-INSTALL_DIR="/home/martin/k8s-tools/static_binaries" # Where to put the final binaries
+BUILD_ROOT="${GITHUB_WORKSPACE}/tmp/k8s-static-build-$(date +%Y%m%d%H%M%S)" # Unique temporary build directory
+INSTALL_DIR="${GITHUB_WORKSPACE}/static_binaries" # Where to put the final binaries
 
 # --- Functions ---
 log_step() {
