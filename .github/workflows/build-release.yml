@@ -113,33 +113,13 @@ jobs:
 
       - name: Create .deb package
         run: |
-          cd static_binaries/
-          fpm -s dir -t deb \
-              -n k8s-tools \
-              -v ${{ needs.build_binaries.outputs.version }} \
-              --iteration 1 \
-              --architecture amd64 \
-              --description "Statically linked Kubernetes CLI tools (kubectl, helm, jq, skopeo, oras, cosign, flux)" \
-              --prefix /usr/local/bin \
-              --exclude .bitwarden-ssh-agent.sock \
-              .
-          mv *.deb ../packages/ # Move generated deb to packages directory
-          cd ..
+          fpm -s dir -t deb -n k8s-tools -v ${{ needs.build_binaries.outputs.version }} --iteration 1 --architecture amd64 --description "Statically linked Kubernetes CLI tools (kubectl, helm, jq, skopeo, oras, cosign, flux)" --prefix /usr/local/bin --exclude .bitwarden-ssh-agent.sock ${GITHUB_WORKSPACE}/static_binaries/
+          mv *.deb packages/
 
       - name: Create .rpm package
         run: |
-          cd static_binaries/
-          fpm -s dir -t rpm \
-              -n k8s-tools \
-              -v ${{ needs.build_binaries.outputs.version }} \
-              --iteration 1 \
-              --architecture x86_64 \
-              --description "Statically linked Kubernetes CLI tools (kubectl, helm, jq, skopeo, oras, cosign, flux)" \
-              --prefix /usr/local/bin \
-              --exclude .bitwarden-ssh-agent.sock \
-              .
-          mv *.rpm ../packages/ # Move generated rpm to packages directory
-          cd ..
+          fpm -s dir -t rpm -n k8s-tools -v ${{ needs.build_binaries.outputs.version }} --iteration 1 --architecture x86_64 --description "Statically linked Kubernetes CLI tools (kubectl, helm, jq, skopeo, oras, cosign, flux)" --prefix /usr/local/bin --exclude .bitwarden-ssh-agent.sock ${GITHUB_WORKSPACE}/static_binaries/
+          mv *.rpm packages/
 
       - name: Upload packages artifact
         uses: actions/upload-artifact@v4
