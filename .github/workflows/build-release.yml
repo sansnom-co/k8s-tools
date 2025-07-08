@@ -57,6 +57,8 @@ jobs:
   scan_binaries:
     runs-on: ubuntu-latest
     needs: build_binaries # Depends on build_binaries job
+    outputs:
+      version: ${{ needs.build_binaries.outputs.version }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -91,7 +93,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: scan_binaries # Depends on scan_binaries job
     outputs:
-      version: ${{ needs.build_binaries.outputs.version }}
+      version: ${{ needs.scan_binaries.outputs.version }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -113,12 +115,12 @@ jobs:
 
       - name: Create .deb package
         run: |
-          sh -c 'fpm -s dir -t deb -n k8s-tools -v "${{ needs.build_binaries.outputs.version }}" --iteration 1 --architecture amd64 --prefix /usr/local/bin --exclude .bitwarden-ssh-agent.sock "${GITHUB_WORKSPACE}/static_binaries"'
+          sh -c 'fpm -s dir -t deb -n k8s-tools -v "${{ needs.scan_binaries.outputs.version }}" --iteration 1 --architecture amd64 --prefix /usr/local/bin --exclude .bitwarden-ssh-agent.sock "${GITHUB_WORKSPACE}/static_binaries"'
           mv *.deb packages/
 
       - name: Create .rpm package
         run: |
-          sh -c 'fpm -s dir -t rpm -n k8s-tools -v "${{ needs.build_binaries.outputs.version }}" --iteration 1 --architecture x86_64 --description "Statically linked Kubernetes CLI tools (kubectl, helm, jq, skopeo, oras, cosign, flux)" --prefix /usr/local/bin --exclude .bitwarden-ssh-agent.sock "${GITHUB_WORKSPACE}/static_binaries"'
+          sh -c 'fpm -s dir -t rpm -n k8s-tools -v "${{ needs.scan_binaries.outputs.version }}" --iteration 1 --architecture x86_64 --description "Statically linked Kubernetes CLI tools (kubectl, helm, jq, skopeo, oras, cosign, flux)" --prefix /usr/local/bin --exclude .bitwarden-ssh-agent.sock "${GITHUB_WORKSPACE}/static_binaries"'
           mv *.rpm packages/
 
       - name: Upload packages artifact
