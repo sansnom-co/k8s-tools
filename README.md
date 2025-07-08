@@ -1,6 +1,6 @@
 # k8s-tools: Statically Linked Kubernetes CLI Tools
 
-This repository provides a collection of essential Kubernetes command-line interface (CLI) tools, built as statically linked binaries. The primary goal is to offer highly portable, self-contained executables that can be easily distributed and run on various Linux distributions (such as Debian, Ubuntu, and RHEL-based systems) without requiring complex dependency management on the target machines.
+This repository provides a collection of essential Kubernetes command-line interface (CLI) tools, built as statically linked binaries. The primary goal is to offer highly portable, self-contained executables that can be easily distributed and run on various Linux distributions (such as Debian, Ubuntu, and RHEL-based systems) without requiring complex dependency management on the target machines.  These staticly linked binaries are pulled directly for their projects repos, built, scanned and released.
 
 ## Included Tools
 
@@ -26,7 +26,9 @@ This project uses a CalVer (Calendar Versioning) scheme for releases, in the for
 
 ### Using Pre-built Packages (Recommended)
 
-The easiest way to install these tools is by adding our package repositories to your system. Packages are automatically built and published via GitHub Actions.
+The deb and rpm packages can be grabbed from the release (left hand side of this readme).
+
+Coming soon, the easiest way to install these tools is by adding our package repositories to your system. Packages are automatically built and published via GitHub Actions.
 
 **1. Add the GPG Key:**
 
