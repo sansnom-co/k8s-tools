@@ -113,12 +113,12 @@ jobs:
 
       - name: Create .deb package
         run: |
-          fpm -s dir -t deb -n k8s-tools -v ${{ needs.build_binaries.outputs.version }} --iteration 1 --architecture amd64 --description "Statically linked Kubernetes CLI tools (kubectl, helm, jq, skopeo, oras, cosign, flux)" --prefix /usr/local/bin --exclude .bitwarden-ssh-agent.sock "${GITHUB_WORKSPACE}/static_binaries"
+          fpm -s dir -t deb -n k8s-tools -v ${{ needs.build_binaries.outputs.version }} --iteration 1 --architecture amd64 --description "Statically linked Kubernetes CLI tools" --prefix /usr/local/bin --exclude .bitwarden-ssh-agent.sock "${GITHUB_WORKSPACE}/static_binaries"
           mv *.deb packages/
 
       - name: Create .rpm package
         run: |
-          fpm -s dir -t rpm -n k8s-tools -v ${{ needs.build_binaries.outputs.version }} --iteration 1 --architecture x86_64 --description "Statically linked Kubernetes CLI tools (kubectl, helm, jq, skopeo, oras, cosign, flux)" --prefix /usr/local/bin --exclude .bitwarden-ssh-agent.sock "${GITHUB_WORKSPACE}/static_binaries"
+          fpm -s dir -t rpm -n k8s-tools -v ${{ needs.build_binaries.outputs.version }} --iteration 1 --architecture x86_64 --description "Statically linked Kubernetes CLI tools" --prefix /usr/local/bin --exclude .bitwarden-ssh-agent.sock "${GITHUB_WORKSPACE}/static_binaries"
           mv *.rpm packages/
 
       - name: Upload packages artifact
