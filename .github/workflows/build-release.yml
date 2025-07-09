@@ -185,20 +185,48 @@ jobs:
       # NEW: Using gh CLI to create release, which handles existing releases better
       - name: Create or Update GitHub Release
         run: |
-          # Check if release already exists for this tag
+          # Create release notes with installation instructions
+          RELEASE_NOTES="## K8s Tools ${{ needs.sign_packages.outputs.version }}
+
+          ### Installation
+
+          #### Debian/Ubuntu:
+          \`\`\`bash
+          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/k8s-tools_${{ needs.sign_packages.outputs.version }}-1_amd64.deb
+          sudo dpkg -i k8s-tools_${{ needs.sign_packages.outputs.version }}-1_amd64.deb
+          \`\`\`
+
+          #### RHEL/Fedora:
+          \`\`\`bash
+          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/k8s-tools-${{ needs.sign_packages.outputs.version }}-1.x86_64.rpm
+          sudo rpm -i k8s-tools-${{ needs.sign_packages.outputs.version }}-1.x86_64.rpm
+          \`\`\`
+
+          ### Included Tools
+          - kubectl
+          - helm
+          - jq
+          - skopeo
+          - oras
+          - cosign
+          - flux
+
+          ### Verify Signatures
+          All packages are GPG signed. Download the .asc files to verify."
+
+          # Check if release exists
           if gh release view ${{ github.ref_name }} --repo ${{ github.repository }} > /dev/null 2>&1; then
-            echo "Release for tag ${{ github.ref_name }} already exists, will update it"
-            # Optionally, you could delete and recreate the release here:
-            # gh release delete ${{ github.ref_name }} --repo ${{ github.repository }} --yes
-            # Then create it fresh below
+            echo "Release already exists, will update it"
+            # Update the release notes
+            gh release edit ${{ github.ref_name }} \
+              --repo ${{ github.repository }} \
+              --notes "$RELEASE_NOTES"
           else
-            echo "Creating new release for tag ${{ github.ref_name }}"
-            # Create the release
-            # --notes can be replaced with --notes-file if you have a CHANGELOG.md
+            echo "Creating new release"
             gh release create ${{ github.ref_name }} \
               --repo ${{ github.repository }} \
               --title "K8s Tools ${{ needs.sign_packages.outputs.version }}" \
-              --notes "Release of K8s Tools version ${{ needs.sign_packages.outputs.version }}"
+              --notes "$RELEASE_NOTES"
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -207,7 +235,6 @@ jobs:
       - name: Upload Release Assets
         run: |
           cd packages/
-          # Loop through all files in the packages directory
           for file in *; do
             echo "Uploading $file to release ${{ github.ref_name }}"
             # The --clobber flag will overwrite existing assets with the same name
