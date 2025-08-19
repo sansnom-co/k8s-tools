@@ -1,3 +1,27 @@
+### --- Secrets ---
+*.age
+*.agekey
+*.gpg
+*.asc
+*.pub
+.piprc
+.npmrc
+.yarnrc.yml
+
+# Keep sample env/secret files tracked
+!.env.example
+!secrets.example.yaml
+
+### --- direnv ---
+.envrc
+.direnv/
+
+### --- Kubernetes (safe keepers) ---
+!Chart.yaml
+!values.yaml
+!kustomization.yaml
+!templates/**
+
 ### --- AI / Copilot / Assistant Artefacts ---
 CLAUDE.md
 GEMINI.md
