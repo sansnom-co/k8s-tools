@@ -125,14 +125,12 @@ jobs:
           echo "Creating new release tag: $NEW_TAG"
           
           # Create release notes
-          RELEASE_NOTES=$(cat <<EOF
-## Automated Release - Upstream Updates
+          UPDATE_SUMMARY="${{ needs.check_releases.outputs.update_summary }}"
+          RELEASE_NOTES="## Automated Release - Upstream Updates
 
-${{ needs.check_releases.outputs.update_summary }}
+${UPDATE_SUMMARY}
 
-This release was automatically triggered due to upstream updates.
-EOF
-          )
+This release was automatically triggered due to upstream updates."
           
           # Create the release (which will trigger the build workflow)
           gh release create "$NEW_TAG" \
@@ -147,12 +145,12 @@ EOF
         shell: bash
         run: |
           ISSUE_TITLE="Upstream Updates Detected - $(date +'%Y-%m-%d')"
-          ISSUE_BODY=$(cat <<EOF
-## Upstream Updates Summary
+          UPDATE_SUMMARY="${{ needs.check_releases.outputs.update_summary }}"
+          ISSUE_BODY="## Upstream Updates Summary
 
 The following upstream releases were detected:
 
-${{ needs.check_releases.outputs.update_summary }}
+${UPDATE_SUMMARY}
 
 A new release has been automatically created which will trigger the build process.
 
@@ -161,9 +159,7 @@ A new release has been automatically created which will trigger the build proces
 - Test the new packages once built
 - Update documentation if needed
 
-This issue was automatically created by the upstream release checker.
-EOF
-          )
+This issue was automatically created by the upstream release checker."
           
           gh issue create \
             --repo ${{ github.repository }} \
