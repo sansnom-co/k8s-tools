@@ -120,7 +120,7 @@ jobs:
           touch gh-pages/.nojekyll
           
           # Create a simple HTML page instead of using Jekyll theme
-          cat > gh-pages/index.html << 'EOF'
+          cat > gh-pages/index.html << 'ENDHTML'
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -306,7 +306,7 @@ sudo apt install k8s-tools</code></pre>
     </div>
 </body>
 </html>
-EOF
+ENDHTML
           
           # Create a README in case someone browses the directories
           cat > gh-pages/README.md << 'EOF'
