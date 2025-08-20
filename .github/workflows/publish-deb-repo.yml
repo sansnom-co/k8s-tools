@@ -44,7 +44,10 @@ jobs:
       - name: Import GPG key
         run: |
           echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
+          # Export public key in the root directory
           echo "${{ secrets.GPG_PASSPHRASE }}" | gpg --batch --yes --passphrase-fd 0 --pinentry-mode loopback --export -a > gh-pages/public_key.asc
+          # Also create a copy with .txt extension as a workaround
+          cp gh-pages/public_key.asc gh-pages/public_key.txt
 
       - name: Download all release assets
         env:
@@ -117,6 +120,16 @@ jobs:
           description: Statically linked Kubernetes CLI tools - Debian Repository
           show_downloads: false
           google_analytics:
+          # Exclude APT repository files from Jekyll processing
+          exclude:
+            - pool/
+            - dists/
+            - public_key.asc
+            - Release
+            - Release.gpg
+            - InRelease
+            - Packages
+            - Packages.gz
           EOF
           
           # Remove .nojekyll if it exists (we want Jekyll processing now)
