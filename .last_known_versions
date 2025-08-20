@@ -1,0 +1,7 @@
+kubectl=v1.33.4
+helm=v3.18.6
+jq=jq-1.8.1
+skopeo=v1.20.0
+oras=v1.2.3
+cosign=v2.5.3
+flux=v2.6.4
