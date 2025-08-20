@@ -1,0 +1,5 @@
+theme: jekyll-theme-hacker
+title: K8s Tools
+description: Statically linked Kubernetes CLI tools - Debian Repository
+show_downloads: false
+google_analytics:
