@@ -119,6 +119,12 @@ jobs:
       - name: Create packages directory
         run: mkdir packages
 
+      - name: Ensure binaries are executable
+        run: |
+          echo "Setting executable permissions on all binaries..."
+          chmod +x ${GITHUB_WORKSPACE}/static_binaries/*
+          ls -la ${GITHUB_WORKSPACE}/static_binaries/
+
       - name: Create .deb package
         # IMPORTANT: Keep FPM command on single line with sh -c wrapper
         # Multi-line format with \ causes issues in GitHub Actions

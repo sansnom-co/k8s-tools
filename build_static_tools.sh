@@ -114,6 +114,10 @@ CGO_ENABLED=0 LDFLAGS='-s -w -extldflags "-static"' make build
 cp bin/flux "$INSTALL_DIR/flux"
 cd "$BUILD_ROOT"
 
+# --- Set executable permissions ---
+log_step "Setting executable permissions..."
+chmod +x "$INSTALL_DIR"/*
+
 # --- Verification ---
 log_step "Verifying static binaries in $INSTALL_DIR..."
 
