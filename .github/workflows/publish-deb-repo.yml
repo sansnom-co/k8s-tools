@@ -116,23 +116,15 @@ jobs:
 
       - name: Create static files
         run: |
-          # We need .nojekyll to serve raw files
-          touch gh-pages/.nojekyll
-          
-          # Copy the index creation script
+          # Copy scripts from main branch
           cp main/scripts/create-repo-index.sh .
-          chmod +x create-repo-index.sh
-          ./create-repo-index.sh
-          mv index.html gh-pages/
+          cp main/scripts/setup-repo-files.sh .
+          chmod +x *.sh
           
-          # Create a README in case someone browses the directories
-          cat > gh-pages/README.md << 'EOF'
-# K8s Tools Debian Repository
-
-This is the APT repository for k8s-tools. 
-
-For installation instructions, visit: https://sansnom-co.github.io/k8s-tools/
-EOF
+          # Run setup in gh-pages directory
+          cd gh-pages
+          ../setup-repo-files.sh
+          cd ..
 
       - name: Create CNAME file
         run: |
