@@ -1,0 +1,272 @@
+name: Build, Scan, Package, Sign, and Release K8s Tools
+
+on:
+  push:
+    branches:
+      - main # Trigger on push to main for development builds
+    tags:
+      - 'v*' # Trigger on new tags (e.g., v25.07.3)
+
+jobs:
+  # Job 1: Build Statically Linked Binaries
+  build_binaries:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.set_version.outputs.version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Build Environment (CalVer)
+        id: set_version
+        run: |
+          # Get current date for CalVer (YY.MM)
+          DATE_VERSION=$(date +'%y.%m')
+          
+          # If it's a tag, use the tag name as the version (e.g., v25.07.3 -> v25.07.3)
+          # Otherwise, use CalVer + run number for development builds
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            VERSION="${{ github.ref_name }}"
+          else
+            # For main branch builds, use CalVer + run number as patch + 'dev' tag
+            VERSION="${DATE_VERSION}.${GITHUB_RUN_NUMBER}-dev"
+          fi
+          echo "Calculated Version: $VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Install build prerequisites
+        run: |
+          sudo apt update
+          sudo apt install -y git golang build-essential pkg-config libc6-dev libgpgme-dev libdevmapper-dev libbtrfs-dev libseccomp-dev libassuan-dev libgpg-error-dev libpcsclite-dev musl-tools musl-dev
+
+      - name: Make build script executable
+        run: chmod +x ./build_static_tools.sh
+
+      - name: Run static binary build script
+        run: ./build_static_tools.sh
+
+      - name: Upload static binaries artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: static-binaries
+          path: static_binaries/
+
+  # Job 2: Scan Binaries with Trivy for security vulnerabilities
+  scan_binaries:
+    runs-on: ubuntu-latest
+    needs: build_binaries # Depends on build_binaries job
+    outputs:
+      version: ${{ needs.build_binaries.outputs.version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download static binaries artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: static-binaries
+          path: static_binaries/
+
+      - name: Install Trivy
+        run: |
+          # Add Trivy repository and install
+          sudo apt-get install -y wget apt-transport-https gnupg
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | gpg --dearmor | sudo tee /usr/share/keyrings/trivy.gpg > /dev/null
+          echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb noble main" | sudo tee /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update
+          sudo apt-get install -y trivy
+
+      - name: Run Trivy scan on binaries
+        run: |
+          # Scan for HIGH and CRITICAL vulnerabilities only
+          trivy fs --format table --severity HIGH,CRITICAL static_binaries/ > trivy-scan-results.txt
+          cat trivy-scan-results.txt # Display results in logs
+
+      - name: Upload Trivy scan results
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-scan-results
+          path: trivy-scan-results.txt
+
+  # Job 3: Package .deb and .rpm with FPM
+  package_binaries:
+    runs-on: ubuntu-latest
+    needs: scan_binaries # Depends on scan_binaries job
+    outputs:
+      version: ${{ needs.scan_binaries.outputs.version }}
+    # Package metadata as environment variables for easy maintenance
+    env:
+      PACKAGE_MAINTAINER: "Martin Stadler <martin@sansnom.co>"
+      PACKAGE_URL: "https://github.com/${{ github.repository }}"
+      PACKAGE_VENDOR: "sansnom-co"
+      PACKAGE_LICENSE: "Apache-2.0"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download static binaries artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: static-binaries
+          path: static_binaries/
+
+      - name: Install Ruby and FPM
+        run: |
+          sudo apt update
+          sudo apt install -y ruby ruby-dev build-essential
+          sudo gem install fpm
+
+      - name: Create packages directory
+        run: mkdir packages
+
+      - name: Ensure binaries are executable
+        run: |
+          echo "Setting executable permissions on all binaries..."
+          chmod +x ${GITHUB_WORKSPACE}/static_binaries/*
+          ls -la ${GITHUB_WORKSPACE}/static_binaries/
+
+      - name: Create .deb package
+        # IMPORTANT: Keep FPM command on single line with sh -c wrapper
+        # Multi-line format with \ causes issues in GitHub Actions
+        # DO NOT add --provides, --conflicts, or --replaces with comma-separated values
+        # Debian packages require space-separated or individual entries for these fields
+        run: |
+          sh -c 'fpm -s dir -t deb -n k8s-tools -v "${{ needs.scan_binaries.outputs.version }}" --iteration 1 --architecture amd64 --maintainer "${PACKAGE_MAINTAINER}" --description "Statically linked Kubernetes CLI tools bundle including kubectl, helm, jq, skopeo, oras, cosign, and flux. All binaries are statically linked for maximum compatibility." --url "${PACKAGE_URL}" --license "${PACKAGE_LICENSE}" --vendor "${PACKAGE_VENDOR}" --category "utils" --depends "ca-certificates" --prefix /usr/local/bin -C "${GITHUB_WORKSPACE}/static_binaries" --exclude .bitwarden-ssh-agent.sock .'
+          mv *.deb packages/
+
+      - name: Create .rpm package
+        # IMPORTANT: Keep FPM command on single line with sh -c wrapper
+        # Multi-line format with \ causes issues in GitHub Actions
+        # RPM packages are more forgiving with metadata but keeping consistent format
+        run: |
+          sh -c 'fpm -s dir -t rpm -n k8s-tools -v "${{ needs.scan_binaries.outputs.version }}" --iteration 1 --architecture x86_64 --maintainer "${PACKAGE_MAINTAINER}" --description "Statically linked Kubernetes CLI tools bundle including kubectl, helm, jq, skopeo, oras, cosign, and flux. All binaries are statically linked for maximum compatibility." --url "${PACKAGE_URL}" --license "${PACKAGE_LICENSE}" --vendor "${PACKAGE_VENDOR}" --category "Applications/System" --depends "ca-certificates" --prefix /usr/local/bin -C "${GITHUB_WORKSPACE}/static_binaries" --exclude .bitwarden-ssh-agent.sock .'
+          mv *.rpm packages/
+
+      - name: Upload packages artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: k8s-packages
+          path: packages/
+
+  # Job 4: Sign Packages with GPG (only for release tags)
+  sign_packages:
+    runs-on: ubuntu-latest
+    needs: package_binaries # Depends on package_binaries job
+    if: startsWith(github.ref, 'refs/tags/v') # Only run on tags for release signing
+    outputs:
+      version: ${{ needs.package_binaries.outputs.version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download packages artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: k8s-packages
+          path: packages/
+
+      - name: Import GPG key
+        # Requires GPG_PRIVATE_KEY and GPG_PASSPHRASE secrets to be set in repo settings
+        # GPG key: B24A23CCB7E16E36 (martin@sansnom.co)
+        run: |
+          echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
+          # Verify key import (optional, but good for debugging)
+          gpg --list-secret-keys --fingerprint
+
+      - name: Sign .deb and .rpm packages
+        run: |
+          cd packages/
+          # Sign each package file with detached signature (.asc file)
+          for file in *.deb *.rpm; do
+            echo "${{ secrets.GPG_PASSPHRASE }}" | gpg --batch --yes --passphrase-fd 0 --pinentry-mode loopback --detach-sign "$file"
+          done
+          cd ..
+
+      - name: Upload signed packages artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: k8s-signed-packages
+          path: packages/
+
+  # Job 5: Publish to GitHub Releases
+  # NOTE: This job uses gh CLI instead of actions/create-release@v1 to handle existing releases gracefully
+  release:
+    runs-on: ubuntu-latest
+    needs: sign_packages # Depends on sign_packages job
+    if: startsWith(github.ref, 'refs/tags/v') # Only run on tags for releases
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download signed packages artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: k8s-signed-packages
+          path: packages/
+
+      # Using gh CLI to create release, which handles existing releases better than actions/create-release@v1
+      - name: Create or Update GitHub Release
+        run: |
+          # Create release notes with installation instructions
+          # Using proper markdown formatting for nice display on GitHub
+          RELEASE_NOTES="## K8s Tools ${{ needs.sign_packages.outputs.version }}
+
+          ### Installation
+
+          #### Debian/Ubuntu:
+          \`\`\`bash
+          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/k8s-tools_${{ needs.sign_packages.outputs.version }}-1_amd64.deb
+          sudo dpkg -i k8s-tools_${{ needs.sign_packages.outputs.version }}-1_amd64.deb
+          \`\`\`
+
+          #### RHEL/Fedora:
+          \`\`\`bash
+          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/k8s-tools-${{ needs.sign_packages.outputs.version }}-1.x86_64.rpm
+          sudo rpm -i k8s-tools-${{ needs.sign_packages.outputs.version }}-1.x86_64.rpm
+          \`\`\`
+
+          ### Included Tools
+          - kubectl - Kubernetes command-line tool
+          - helm - Kubernetes package manager
+          - jq - Command-line JSON processor
+          - skopeo - Container image inspection and copying
+          - oras - OCI Registry As Storage CLI
+          - cosign - Container signing and verification
+          - flux - GitOps toolkit for Kubernetes
+
+          ### Verify Signatures
+          All packages are GPG signed. Download the .asc files to verify."
+
+          # Check if release already exists for this tag
+          if gh release view ${{ github.ref_name }} --repo ${{ github.repository }} > /dev/null 2>&1; then
+            echo "Release already exists, will update it"
+            # Update the release notes if release exists
+            gh release edit ${{ github.ref_name }} \
+              --repo ${{ github.repository }} \
+              --notes "$RELEASE_NOTES"
+          else
+            echo "Creating new release"
+            # Create new release with our formatted notes
+            gh release create ${{ github.ref_name }} \
+              --repo ${{ github.repository }} \
+              --title "K8s Tools ${{ needs.sign_packages.outputs.version }}" \
+              --notes "$RELEASE_NOTES"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Upload all the packages and their signatures to the release
+      - name: Upload Release Assets
+        run: |
+          cd packages/
+          # Upload each file (packages and signatures)
+          for file in *; do
+            echo "Uploading $file to release ${{ github.ref_name }}"
+            # The --clobber flag will overwrite existing assets with the same name
+            # This is useful if you need to re-run the workflow
+            gh release upload ${{ github.ref_name }} "$file" \
+              --repo ${{ github.repository }} \
+              --clobber
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
