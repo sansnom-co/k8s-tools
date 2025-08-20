@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>K8s Tools Debian Repository</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        code { background: #f4f4f4; padding: 2px 5px; }
+        pre { background: #f4f4f4; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>K8s Tools Debian Repository</h1>
+    <p>This repository provides Debian packages for statically linked Kubernetes CLI tools.</p>
+    
+    <h2>Installation</h2>
+    <p>Add the repository to your system:</p>
+    
+    <h3>1. Add the GPG key:</h3>
+    <pre><code>wget -O- https://sansnom-co.github.io/k8s-tools/public_key.asc | sudo gpg --dearmor -o /usr/share/keyrings/sansnom-k8s-tools.gpg</code></pre>
+    
+    <h3>2. Add the repository:</h3>
+    <pre><code>echo "deb [signed-by=/usr/share/keyrings/sansnom-k8s-tools.gpg] https://sansnom-co.github.io/k8s-tools stable main" | sudo tee /etc/apt/sources.list.d/sansnom-k8s-tools.list</code></pre>
+    
+    <h3>3. Update and install:</h3>
+    <pre><code>sudo apt update
+sudo apt install k8s-tools</code></pre>
+    
+    <h2>Included Tools</h2>
+    <ul>
+        <li>kubectl - Kubernetes command-line tool</li>
+        <li>helm - Kubernetes package manager</li>
+        <li>jq - Command-line JSON processor</li>
+        <li>skopeo - Container image tool</li>
+        <li>oras - OCI Registry As Storage</li>
+        <li>cosign - Container signing</li>
+        <li>flux - GitOps toolkit</li>
+    </ul>
+    
+    <p>View the project on <a href="https://github.com/sansnom-co/k8s-tools">GitHub</a></p>
+</body>
+</html>

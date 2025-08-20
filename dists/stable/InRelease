@@ -1,0 +1,25 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+Origin: sansnom-co
+Label: K8s Tools
+Suite: stable
+Codename: stable
+Version: 1.0
+Architectures: amd64
+Components: main
+Description: Statically linked Kubernetes CLI tools
+Date: Wed, 20 Aug 2025 15:15:44 +0000
+MD5Sum:
+fe613b12ca192595b6087403cf7ce1ec  ./main/binary-amd64/Packages.gz
+d41d8cd98f00b204e9800998ecf8427e  ./main/binary-amd64/Packages
+SHA256:
+d120908cba2d48836aaa65dff2fa9cef1a0408c1f1107f17905c7f9f420dbfa2  ./main/binary-amd64/Packages.gz
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  ./main/binary-amd64/Packages
+-----BEGIN PGP SIGNATURE-----
+
+iHUEARYKAB0WIQQrmMakwzX6K9HoqJ6ySiPMt+FuNgUCaKXmoQAKCRCySiPMt+Fu
+Nr3wAP9zjMMgka+1WCCQ6hEgjlv/CMM7Fj+D+Svjl25XRBjDQQD/Z2r5d5+vcmet
+SazDW16/OegyamYaAeaQWRPMAF9REAY=
+=tWQq
+-----END PGP SIGNATURE-----
