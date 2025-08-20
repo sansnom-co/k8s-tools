@@ -108,50 +108,91 @@ jobs:
           echo "${{ secrets.GPG_PASSPHRASE }}" | gpg --batch --yes --passphrase-fd 0 --pinentry-mode loopback --detach-sign --armor -o Release.gpg Release
           echo "${{ secrets.GPG_PASSPHRASE }}" | gpg --batch --yes --passphrase-fd 0 --pinentry-mode loopback --clearsign -o InRelease Release
 
-      - name: Create index.html
+      - name: Create Jekyll configuration
         run: |
-          cat > gh-pages/index.html << 'EOF'
-          <!DOCTYPE html>
-          <html>
-          <head>
-              <title>K8s Tools Debian Repository</title>
-              <style>
-                  body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-                  code { background: #f4f4f4; padding: 2px 5px; }
-                  pre { background: #f4f4f4; padding: 10px; overflow-x: auto; }
-              </style>
-          </head>
-          <body>
-              <h1>K8s Tools Debian Repository</h1>
-              <p>This repository provides Debian packages for statically linked Kubernetes CLI tools.</p>
-              
-              <h2>Installation</h2>
-              <p>Add the repository to your system:</p>
-              
-              <h3>1. Add the GPG key:</h3>
-              <pre><code>wget -O- https://sansnom-co.github.io/k8s-tools/public_key.asc | sudo gpg --dearmor -o /usr/share/keyrings/sansnom-k8s-tools.gpg</code></pre>
-              
-              <h3>2. Add the repository:</h3>
-              <pre><code>echo "deb [signed-by=/usr/share/keyrings/sansnom-k8s-tools.gpg] https://sansnom-co.github.io/k8s-tools stable main" | sudo tee /etc/apt/sources.list.d/sansnom-k8s-tools.list</code></pre>
-              
-              <h3>3. Update and install:</h3>
-              <pre><code>sudo apt update
-          sudo apt install k8s-tools</code></pre>
-              
-              <h2>Included Tools</h2>
-              <ul>
-                  <li>kubectl - Kubernetes command-line tool</li>
-                  <li>helm - Kubernetes package manager</li>
-                  <li>jq - Command-line JSON processor</li>
-                  <li>skopeo - Container image tool</li>
-                  <li>oras - OCI Registry As Storage</li>
-                  <li>cosign - Container signing</li>
-                  <li>flux - GitOps toolkit</li>
-              </ul>
-              
-              <p>View the project on <a href="https://github.com/sansnom-co/k8s-tools">GitHub</a></p>
-          </body>
-          </html>
+          # Create _config.yml for Jekyll with Hacker theme
+          cat > gh-pages/_config.yml << 'EOF'
+          theme: jekyll-theme-hacker
+          title: K8s Tools
+          description: Statically linked Kubernetes CLI tools - Debian Repository
+          show_downloads: false
+          google_analytics:
+          EOF
+          
+          # Remove .nojekyll if it exists (we want Jekyll processing now)
+          rm -f gh-pages/.nojekyll
+          
+          # Create index.md (Jekyll will convert this to HTML)
+          cat > gh-pages/index.md << 'EOF'
+          # K8s Tools Debian Repository
+          
+          This repository provides Debian packages for statically linked Kubernetes CLI tools. All tools are built from source and statically linked for maximum portability.
+          
+          ## 🚀 Quick Installation
+          
+          Add this repository to your Debian/Ubuntu system:
+          
+          ```bash
+          # Add the GPG key
+          wget -O- https://sansnom-co.github.io/k8s-tools/public_key.asc | \
+            sudo gpg --dearmor -o /usr/share/keyrings/sansnom-k8s-tools.gpg
+          
+          # Add the repository
+          echo "deb [signed-by=/usr/share/keyrings/sansnom-k8s-tools.gpg] \
+            https://sansnom-co.github.io/k8s-tools stable main" | \
+            sudo tee /etc/apt/sources.list.d/sansnom-k8s-tools.list
+          
+          # Update and install
+          sudo apt update
+          sudo apt install k8s-tools
+          ```
+          
+          ## 📦 Included Tools
+          
+          | Tool | Description | Version |
+          |------|-------------|---------|
+          | **kubectl** | Kubernetes command-line tool | Latest |
+          | **helm** | Kubernetes package manager | Latest |
+          | **jq** | Command-line JSON processor | Latest |
+          | **skopeo** | Container image inspection and copying | Latest |
+          | **oras** | OCI Registry As Storage CLI | Latest |
+          | **cosign** | Container signing and verification | Latest |
+          | **flux** | GitOps toolkit for Kubernetes | Latest |
+          
+          ## 🔐 Security
+          
+          - All packages are GPG signed
+          - Binaries are statically linked
+          - Built from official upstream sources
+          - Automated security scanning with Trivy
+          
+          ## 📝 Repository Details
+          
+          - **Suite**: stable
+          - **Component**: main
+          - **Architecture**: amd64
+          - **GPG Key ID**: B24A23CCB7E16E36
+          
+          ## 🔗 Links
+          
+          - [GitHub Repository](https://github.com/sansnom-co/k8s-tools)
+          - [Releases](https://github.com/sansnom-co/k8s-tools/releases)
+          - [GPG Public Key](https://sansnom-co.github.io/k8s-tools/public_key.asc)
+          
+          ## 📊 Repository Structure
+          
+          ```
+          /
+          ├── dists/stable/         # APT metadata
+          │   └── main/
+          │       └── binary-amd64/
+          ├── pool/main/k/k8s-tools/  # Package files
+          └── public_key.asc          # GPG public key
+          ```
+          
+          ---
+          
+          <small>Updated automatically via GitHub Actions</small>
           EOF
 
       - name: Create CNAME file

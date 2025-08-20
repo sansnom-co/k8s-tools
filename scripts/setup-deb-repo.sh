@@ -25,22 +25,22 @@ else
     mkdir -p pool/main/k/k8s-tools
     mkdir -p dists/stable/main/binary-amd64
     
-    # Create placeholder index
-    cat > index.html << 'EOF'
-<!DOCTYPE html>
-<html>
-<head>
-    <title>K8s Tools Debian Repository</title>
-</head>
-<body>
-    <h1>K8s Tools Debian Repository</h1>
-    <p>Repository is being set up...</p>
-</body>
-</html>
+    # Create Jekyll config for Hacker theme
+    cat > _config.yml << 'EOF'
+theme: jekyll-theme-hacker
+title: K8s Tools
+description: Statically linked Kubernetes CLI tools - Debian Repository
+show_downloads: false
 EOF
     
-    # Create .nojekyll to prevent Jekyll processing
-    touch .nojekyll
+    # Create placeholder index
+    cat > index.md << 'EOF'
+# K8s Tools Debian Repository
+
+Repository is being set up...
+
+Please check back soon!
+EOF
     
     # Commit and push
     git add .
