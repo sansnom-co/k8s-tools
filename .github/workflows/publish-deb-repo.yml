@@ -52,34 +52,48 @@ jobs:
           # Also create a copy with .txt extension as a workaround
           cp gh-pages/public_key.asc gh-pages/public_key.txt
 
-      - name: Download all release assets
+      - name: Create APT repository metadata
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Create necessary directories
-          mkdir -p gh-pages/pool/main/k/k8s-tools
           mkdir -p gh-pages/dists/stable/main/binary-amd64
           
-          # Get all releases and download .deb files
-          echo "Downloading all .deb packages from releases..."
+          # Create a Packages file that points to GitHub releases
+          echo "Creating Packages file with redirect to releases..."
           
-          gh api repos/${{ github.repository }}/releases --jq '.[] | .assets[] | select(.name | endswith(".deb")) | .browser_download_url' | while read -r url; do
-            filename=$(basename "$url")
-            echo "Downloading $filename..."
-            wget -q "$url" -O "gh-pages/pool/main/k/k8s-tools/$filename" || echo "Failed to download $filename"
-          done
+          # Get all .deb files from releases and create Packages entries
+          > gh-pages/dists/stable/main/binary-amd64/Packages
           
-          # Also download signature files
-          gh api repos/${{ github.repository }}/releases --jq '.[] | .assets[] | select(.name | endswith(".deb.asc")) | .browser_download_url' | while read -r url; do
-            filename=$(basename "$url")
-            echo "Downloading signature $filename..."
-            wget -q "$url" -O "gh-pages/pool/main/k/k8s-tools/$filename" || echo "Failed to download $filename"
+          gh api repos/${{ github.repository }}/releases --jq '.[] | .assets[] | select(.name | endswith(".deb"))' | jq -r '{name, browser_download_url, size}' | while IFS= read -r line; do
+            name=$(echo "$line" | jq -r '.name')
+            url=$(echo "$line" | jq -r '.browser_download_url')
+            size=$(echo "$line" | jq -r '.size')
+            
+            # Extract version from filename (e.g., k8s-tools_25.08.0-1_amd64.deb -> 25.08.0-1)
+            version=$(echo "$name" | sed -n 's/k8s-tools_\(.*\)_amd64\.deb/\1/p')
+            
+            # Create a minimal Packages entry
+            cat >> gh-pages/dists/stable/main/binary-amd64/Packages << ENDPKG
+Package: k8s-tools
+Version: ${version}
+Architecture: amd64
+Maintainer: Martin Stadler <martin@sansnom.co>
+Depends: ca-certificates
+Section: utils
+Priority: optional
+Size: ${size}
+Filename: ${url}
+Description: Statically linked Kubernetes CLI tools
+ This package contains kubectl, helm, jq, skopeo, oras, cosign, and flux.
+ All binaries are statically linked for maximum compatibility.
+
+ENDPKG
           done
 
-      - name: Generate Packages file
+      - name: Compress Packages file
         run: |
           cd gh-pages
-          dpkg-scanpackages pool/main /dev/null > dists/stable/main/binary-amd64/Packages
           gzip -9c dists/stable/main/binary-amd64/Packages > dists/stable/main/binary-amd64/Packages.gz
 
       - name: Create Release file

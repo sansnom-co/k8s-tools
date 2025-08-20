@@ -28,7 +28,9 @@ This project uses a CalVer (Calendar Versioning) scheme for releases, in the for
 
 #### Option 1: Install from APT Repository (Debian/Ubuntu)
 
-The easiest way to install these tools is by adding our APT repository to your system:
+The easiest way to install these tools is by adding our APT repository to your system.
+
+**Note**: The APT repository redirects to GitHub Releases for package downloads, so you'll need internet access during installation.
 
 **1. Add the GPG Key:**
 
