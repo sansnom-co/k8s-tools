@@ -18,6 +18,7 @@ jobs:
 
       - name: Check for upstream releases
         id: check_updates
+        shell: bash
         run: |
           # Initialize variables
           HAS_UPDATES=false
@@ -37,20 +38,20 @@ jobs:
             gh api repos/$repo/releases/latest --jq '.tag_name' 2>/dev/null || echo "unknown"
           }
           
-          # Tools to check
-          declare -A TOOLS=(
-            ["kubectl"]="kubernetes/kubernetes"
-            ["helm"]="helm/helm"
-            ["jq"]="jqlang/jq"
-            ["skopeo"]="containers/skopeo"
-            ["oras"]="oras-project/oras"
-            ["cosign"]="sigstore/cosign"
-            ["flux"]="fluxcd/flux2"
+          # Tools to check (format: tool:repo)
+          TOOLS=(
+            "kubectl:kubernetes/kubernetes"
+            "helm:helm/helm"
+            "jq:jqlang/jq"
+            "skopeo:containers/skopeo"
+            "oras:oras-project/oras"
+            "cosign:sigstore/cosign"
+            "flux:fluxcd/flux2"
           )
           
           # Check each tool
-          for tool in "${!TOOLS[@]}"; do
-            repo="${TOOLS[$tool]}"
+          for tool_info in "${TOOLS[@]}"; do
+            IFS=':' read -r tool repo <<< "$tool_info"
             echo "Checking $tool from $repo..."
             
             # Get latest release
@@ -106,6 +107,7 @@ jobs:
         run: echo "date=$(date +'%Y.%m')" >> $GITHUB_OUTPUT
 
       - name: Create release tag
+        shell: bash
         run: |
           # Calculate next patch number
           LATEST_TAG=$(gh api repos/${{ github.repository }}/releases/latest --jq '.tag_name' 2>/dev/null || echo "v0.0.0")
@@ -142,6 +144,7 @@ EOF
 
       - name: Create issue for upstream updates
         if: always()
+        shell: bash
         run: |
           ISSUE_TITLE="Upstream Updates Detected - $(date +'%Y-%m-%d')"
           ISSUE_BODY=$(cat <<EOF
