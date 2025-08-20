@@ -26,35 +26,39 @@ This project uses a CalVer (Calendar Versioning) scheme for releases, in the for
 
 ### Using Pre-built Packages (Recommended)
 
-The deb and rpm packages can be grabbed from the release (left hand side of this readme).
+#### Option 1: Install from APT Repository (Debian/Ubuntu)
 
-Coming soon, the easiest way to install these tools is by adding our package repositories to your system. Packages are automatically built and published via GitHub Actions.
+The easiest way to install these tools is by adding our APT repository to your system:
 
 **1. Add the GPG Key:**
 
-First, import the public GPG key used to sign the repository and packages. This ensures the authenticity and integrity of the packages.
-
 ```bash
-wget -O- https://sansnom.github.io/k8s-tools/public_key.asc | sudo gpg --dearmor -o /usr/share/keyrings/sansnom-k8s-tools.gpg
+wget -O- https://sansnom-co.github.io/k8s-tools/public_key.asc | sudo gpg --dearmor -o /usr/share/keyrings/sansnom-k8s-tools.gpg
 ```
 
 **2. Add the Repository:**
 
-Choose your distribution type below:
-
-#### For Debian/Ubuntu-based Systems (APT)
-
-Create a new file `/etc/apt/sources.list.d/sansnom-k8s-tools.list` with the following content:
-
-```
-deb [signed-by=/usr/share/keyrings/sansnom-k8s-tools.gpg] https://sansnom.github.io/k8s-tools stable main
+```bash
+echo "deb [signed-by=/usr/share/keyrings/sansnom-k8s-tools.gpg] https://sansnom-co.github.io/k8s-tools stable main" | sudo tee /etc/apt/sources.list.d/sansnom-k8s-tools.list
 ```
 
-Then, update your package list and install:
+**3. Install the Package:**
 
 ```bash
 sudo apt update
 sudo apt install k8s-tools
+```
+
+#### Option 2: Direct Download
+
+You can also download packages directly from the [releases page](https://github.com/sansnom-co/k8s-tools/releases).
+
+```bash
+# Download the latest .deb package
+wget https://github.com/sansnom-co/k8s-tools/releases/latest/download/k8s-tools_*.deb
+
+# Install the package
+sudo dpkg -i k8s-tools_*.deb
 ```
 
 #### For RHEL/CentOS-based Systems (RPM)
