@@ -63,14 +63,14 @@ jobs:
           # Get all releases and download .deb files
           echo "Downloading all .deb packages from releases..."
           
-          gh release list --repo ${{ github.repository }} --limit 100 --json tagName,assets | jq -r '.[] | .assets[] | select(.name | endswith(".deb")) | .url' | while read -r url; do
+          gh api repos/${{ github.repository }}/releases --jq '.[] | .assets[] | select(.name | endswith(".deb")) | .browser_download_url' | while read -r url; do
             filename=$(basename "$url")
             echo "Downloading $filename..."
             wget -q "$url" -O "gh-pages/pool/main/k/k8s-tools/$filename" || echo "Failed to download $filename"
           done
           
           # Also download signature files
-          gh release list --repo ${{ github.repository }} --limit 100 --json tagName,assets | jq -r '.[] | .assets[] | select(.name | endswith(".deb.asc")) | .url' | while read -r url; do
+          gh api repos/${{ github.repository }}/releases --jq '.[] | .assets[] | select(.name | endswith(".deb.asc")) | .browser_download_url' | while read -r url; do
             filename=$(basename "$url")
             echo "Downloading signature $filename..."
             wget -q "$url" -O "gh-pages/pool/main/k/k8s-tools/$filename" || echo "Failed to download $filename"
@@ -117,13 +117,13 @@ jobs:
       - name: Create static files
         run: |
           # Copy scripts from main branch
-          cp main/scripts/create-repo-index.sh .
-          cp main/scripts/setup-repo-files.sh .
-          chmod +x *.sh
+          cp main/scripts/create-repo-index.sh gh-pages/
+          cp main/scripts/setup-repo-files.sh gh-pages/
           
           # Run setup in gh-pages directory
           cd gh-pages
-          ../setup-repo-files.sh
+          chmod +x *.sh
+          ./setup-repo-files.sh
           cd ..
 
       - name: Create CNAME file
