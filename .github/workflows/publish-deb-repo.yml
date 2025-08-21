@@ -35,7 +35,19 @@ jobs:
             cd gh-pages
             git init
             git checkout -b gh-pages
+            # Create empty initial commit
+            git config --local user.email "action@github.com"
+            git config --local user.name "GitHub Action"
+            touch .nojekyll
+            git add .nojekyll
+            git commit -m "Initial gh-pages branch"
             git remote add origin https://github.com/${{ github.repository }}.git
+            cd ..
+          else
+            echo "gh-pages branch exists, cleaning it..."
+            cd gh-pages
+            # Remove all files except .git
+            find . -mindepth 1 -maxdepth 1 -name '.git' -prune -o -exec rm -rf {} +
             cd ..
           fi
 
