@@ -47,10 +47,14 @@ jobs:
       - name: Import GPG key
         run: |
           echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
-          # Export public key in the root directory
-          echo "${{ secrets.GPG_PASSPHRASE }}" | gpg --batch --yes --passphrase-fd 0 --pinentry-mode loopback --export -a > gh-pages/public_key.asc
+          # List imported keys for debugging
+          gpg --list-secret-keys
+          # Export public key using the key ID
+          gpg --armor --export B24A23CCB7E16E36 > gh-pages/public_key.asc
           # Also create a copy with .txt extension as a workaround
           cp gh-pages/public_key.asc gh-pages/public_key.txt
+          # Verify the key was exported
+          echo "Public key size: $(wc -c < gh-pages/public_key.asc) bytes"
 
       - name: Create APT repository metadata
         env:
