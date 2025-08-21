@@ -1,4 +1,17 @@
 Package: k8s-tools
+Version: 25.08.1-1
+Architecture: amd64
+Maintainer: Martin Stadler <martin@sansnom.co>
+Depends: ca-certificates
+Section: utils
+Priority: optional
+Size: 105844920
+Filename: https://github.com/sansnom-co/k8s-tools/releases/download/v25.08.1/k8s-tools_25.08.1-1_amd64.deb
+Description: Statically linked Kubernetes CLI tools
+ This package contains kubectl, helm, jq, skopeo, oras, cosign, and flux.
+ All binaries are statically linked for maximum compatibility.
+
+Package: k8s-tools
 Version: 25.08.0-1
 Architecture: amd64
 Maintainer: Martin Stadler <martin@sansnom.co>
