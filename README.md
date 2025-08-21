@@ -164,3 +164,5 @@ Contributions are welcome! Please refer to the `CONTRIBUTING.md` file for guidel
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
+
+<p align="center">Made with ❤️ and ☕ in London</p>
