@@ -1,3 +1,8 @@
+#!/bin/bash
+
+# Create the index.html file for the GitHub Pages repository
+
+cat > index.html << 'ENDHTML'
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -183,3 +188,4 @@ sudo apt install k8s-tools</code></pre>
     </div>
 </body>
 </html>
+ENDHTML

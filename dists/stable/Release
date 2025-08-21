@@ -6,10 +6,10 @@ Version: 1.0
 Architectures: amd64
 Components: main
 Description: Statically linked Kubernetes CLI tools
-Date: Wed, 20 Aug 2025 17:00:21 +0000
+Date: Thu, 21 Aug 2025 10:49:22 +0000
 MD5Sum:
-cdb665090754485636f2a34c9ddc7378  ./main/binary-amd64/Packages.gz
+1cbc0ffd8c0ac20e2767bb1f13d6ce85  ./main/binary-amd64/Packages.gz
 d41d8cd98f00b204e9800998ecf8427e  ./main/binary-amd64/Packages
 SHA256:
-48f2947dfdbb605aaa77ae79e67cd096b4045aa339994a1617bbe3a86e2d8db1  ./main/binary-amd64/Packages.gz
+eeb6fd287dffcf9f0c27977ed282f068d9f196773453354259246b3b670989fe  ./main/binary-amd64/Packages.gz
 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  ./main/binary-amd64/Packages
