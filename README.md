@@ -1,6 +1,6 @@
 # k8s-tools: Statically Linked Kubernetes CLI Tools
 
-This repository provides a collection of essential Kubernetes command-line interface (CLI) tools, built as statically linked binaries. The primary goal is to offer highly portable, self-contained executables that can be easily distributed and run on various Linux distributions (such as Debian, Ubuntu, and RHEL-based systems) without requiring complex dependency management on the target machines.  These staticly linked binaries are pulled directly for their projects repos, built, scanned and released.
+This repository provides a collection of essential Kubernetes command-line interface (CLI) tools, built as statically linked binaries. The primary goal is to offer highly portable, self-contained executables that can be easily distributed and run on various Linux distributions (such as Debian, Ubuntu, and RHEL-based systems) without requiring complex dependency management on the target machines. These statically linked binaries are pulled directly from their projects' repos, built, scanned and released.
 
 ## Included Tools
 
@@ -20,7 +20,7 @@ Statically linked binaries include all their necessary libraries and dependencie
 
 ## Versioning
 
-This project uses a CalVer (Calendar Versioning) scheme for releases, in the format `YY.MM.patch-tag` (e.g., `24.07.0-alpha`).
+This project uses a CalVer (Calendar Versioning) scheme for releases, in the format `YY.MM.patch` (e.g., `25.08.1`).
 
 ## Installation
 
@@ -32,16 +32,49 @@ The easiest way to install these tools is by adding our APT repository to your s
 
 **Note**: The APT repository redirects to GitHub Releases for package downloads, so you'll need internet access during installation.
 
+##### For APT 2.x (Traditional format)
+
 **1. Add the GPG Key:**
 
 ```bash
-wget -O- https://sansnom-co.github.io/k8s-tools/public_key.asc | sudo gpg --dearmor -o /usr/share/keyrings/sansnom-k8s-tools.gpg
+wget -O- https://sansnom-co.github.io/k8s-tools/public_key.asc | \
+  sudo gpg --dearmor -o /usr/share/keyrings/sansnom-k8s-tools.gpg
 ```
 
 **2. Add the Repository:**
 
 ```bash
-echo "deb [signed-by=/usr/share/keyrings/sansnom-k8s-tools.gpg] https://sansnom-co.github.io/k8s-tools stable main" | sudo tee /etc/apt/sources.list.d/sansnom-k8s-tools.list
+echo "deb [signed-by=/usr/share/keyrings/sansnom-k8s-tools.gpg] \
+  https://sansnom-co.github.io/k8s-tools stable main" | \
+  sudo tee /etc/apt/sources.list.d/sansnom-k8s-tools.list
+```
+
+**3. Install the Package:**
+
+```bash
+sudo apt update
+sudo apt install k8s-tools
+```
+
+##### For APT 3.0+ (deb822 format)
+
+**1. Add the GPG Key:**
+
+```bash
+wget -O- https://sansnom-co.github.io/k8s-tools/public_key.asc | \
+  sudo gpg --dearmor -o /usr/share/keyrings/sansnom-k8s-tools.gpg
+```
+
+**2. Add the Repository:**
+
+```bash
+sudo tee /etc/apt/sources.list.d/sansnom-k8s-tools.sources << EOF
+Types: deb
+URIs: https://sansnom-co.github.io/k8s-tools
+Suites: stable
+Components: main
+Signed-By: /usr/share/keyrings/sansnom-k8s-tools.gpg
+EOF
 ```
 
 **3. Install the Package:**
@@ -65,20 +98,14 @@ sudo dpkg -i k8s-tools_*.deb
 
 #### For RHEL/CentOS-based Systems (RPM)
 
-Create a new file `/etc/yum.repos.d/sansnom-k8s-tools.repo` with the following content:
-
-```
-[sansnom-k8s-tools]
-name=Sansnom K8s Tools
-baseurl=https://sansnom.github.io/k8s-tools/rpm
-enabled=1
-gpgcheck=0 # Set to 1 if you implement RPM signing and import the key
-```
-
-Then, install the package:
+**Note**: RPM packages are available in the releases but not yet served via a YUM repository.
 
 ```bash
-sudo yum install k8s-tools # or dnf install k8s-tools
+# Download the latest .rpm package
+wget https://github.com/sansnom-co/k8s-tools/releases/latest/download/k8s-tools-*.rpm
+
+# Install the package
+sudo rpm -ivh k8s-tools-*.rpm
 ```
 
 ### Building from Source
@@ -91,7 +118,7 @@ Ensure you have `git`, `golang`, `build-essential`, `pkg-config`, and various de
 
 ```bash
 # Clone the repository
-git clone https://github.com/sansnom/k8s-tools.git
+git clone https://github.com/sansnom-co/k8s-tools.git
 cd k8s-tools
 
 # Make the build script executable
@@ -114,6 +141,21 @@ ldd static_binaries/kubectl
 ls -lh static_binaries/jq
 ldd static_binaries/jq
 ```
+
+## Security
+
+- All packages are GPG signed with key ID: `B24A23CCB7E16E36`
+- Binaries are statically linked for security and portability
+- Built from official upstream sources
+- Automated security scanning with Trivy on every build
+- Automated upstream release monitoring
+
+## Repository Information
+
+- **APT Repository**: https://sansnom-co.github.io/k8s-tools
+- **GitHub Repository**: https://github.com/sansnom-co/k8s-tools
+- **Releases**: https://github.com/sansnom-co/k8s-tools/releases
+- **GPG Public Key**: https://sansnom-co.github.io/k8s-tools/public_key.asc
 
 ## Contributing
 
