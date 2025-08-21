@@ -12,14 +12,16 @@ cat > index.html << 'ENDHTML'
     <style>
         :root {
             --bg-color: #0d1117;
-            --text-color: #58a6ff;
+            --text-color: #c9d1d9;
             --code-bg: #161b22;
             --border-color: #30363d;
+            --header-color: #ffffff;
         }
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            font-size: 16px;
             line-height: 1.6;
             margin: 0;
             padding: 20px;
@@ -28,16 +30,21 @@ cat > index.html << 'ENDHTML'
             max-width: 1000px;
             margin: 0 auto;
         }
-        h1, h2, h3 {
-            color: #58a6ff;
+        h1, h2 {
+            color: var(--header-color);
             border-bottom: 1px solid var(--border-color);
             padding-bottom: 0.3em;
+        }
+        h3 {
+            color: var(--header-color);
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
         }
         code {
             background-color: var(--code-bg);
             padding: 0.2em 0.4em;
             border-radius: 3px;
-            font-size: 85%;
+            font-size: 14px;
         }
         pre {
             background-color: var(--code-bg);
@@ -45,10 +52,12 @@ cat > index.html << 'ENDHTML'
             overflow-x: auto;
             border-radius: 6px;
             border: 1px solid var(--border-color);
+            font-size: 14px;
         }
         pre code {
             background-color: transparent;
             padding: 0;
+            font-size: 14px;
         }
         a {
             color: #58a6ff;
@@ -77,14 +86,13 @@ cat > index.html << 'ENDHTML'
 </head>
 <body>
     <div class="container">
-        <h1>🚀 K8s Tools Debian Repository</h1>
+        <h1>K8s Tools Debian Repository</h1>
         
         <p>This repository provides Debian packages for statically linked Kubernetes CLI tools. All tools are built from source and statically linked for maximum portability.</p>
         
-        <h2>📦 Quick Installation</h2>
+        <h2>Quick Installation</h2>
         
-        <p>Add this repository to your Debian/Ubuntu system:</p>
-        
+        <h3>For APT 2.x (Traditional format)</h3>
         <pre><code># Add the GPG key
 wget -O- <a href="/k8s-tools/public_key.asc">https://sansnom-co.github.io/k8s-tools/public_key.asc</a> | \
   sudo gpg --dearmor -o /usr/share/keyrings/sansnom-k8s-tools.gpg
@@ -98,7 +106,25 @@ echo "deb [signed-by=/usr/share/keyrings/sansnom-k8s-tools.gpg] \
 sudo apt update
 sudo apt install k8s-tools</code></pre>
         
-        <h2>🛠️ Included Tools</h2>
+        <h3>For APT 3.0+ (deb822 format)</h3>
+        <pre><code># Add the GPG key
+wget -O- <a href="/k8s-tools/public_key.asc">https://sansnom-co.github.io/k8s-tools/public_key.asc</a> | \
+  sudo gpg --dearmor -o /usr/share/keyrings/sansnom-k8s-tools.gpg
+
+# Add the repository using deb822 format
+sudo tee /etc/apt/sources.list.d/sansnom-k8s-tools.sources << EOF
+Types: deb
+URIs: https://sansnom-co.github.io/k8s-tools
+Suites: stable
+Components: main
+Signed-By: /usr/share/keyrings/sansnom-k8s-tools.gpg
+EOF
+
+# Update and install
+sudo apt update
+sudo apt install k8s-tools</code></pre>
+        
+        <h2>Included Tools</h2>
         
         <table>
             <thead>
@@ -147,7 +173,7 @@ sudo apt install k8s-tools</code></pre>
             </tbody>
         </table>
         
-        <h2>🔐 Security</h2>
+        <h2>Security</h2>
         
         <ul>
             <li>All packages are GPG signed</li>
@@ -156,7 +182,7 @@ sudo apt install k8s-tools</code></pre>
             <li>Automated security scanning with Trivy</li>
         </ul>
         
-        <h2>📝 Repository Details</h2>
+        <h2>Repository Details</h2>
         
         <ul>
             <li><strong>Suite</strong>: stable</li>
@@ -165,7 +191,7 @@ sudo apt install k8s-tools</code></pre>
             <li><strong>GPG Key ID</strong>: B24A23CCB7E16E36</li>
         </ul>
         
-        <h2>🔗 Links</h2>
+        <h2>Links</h2>
         
         <ul>
             <li><a href="https://github.com/sansnom-co/k8s-tools">GitHub Repository</a></li>
@@ -173,7 +199,7 @@ sudo apt install k8s-tools</code></pre>
             <li><a href="/k8s-tools/public_key.asc">GPG Public Key</a></li>
         </ul>
         
-        <h2>📊 Repository Structure</h2>
+        <h2>Repository Structure</h2>
         
         <pre><code>/
 ├── <a href="/k8s-tools/dists/">dists/stable/</a>         # APT metadata
