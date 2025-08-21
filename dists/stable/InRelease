@@ -9,17 +9,20 @@ Version: 1.0
 Architectures: amd64
 Components: main
 Description: Statically linked Kubernetes CLI tools
-Date: Thu, 21 Aug 2025 11:32:15 +0000
+Date: Thu, 21 Aug 2025 12:21:17 +0000
 MD5Sum:
-047dac8d837028d86592321870e8342e  ./main/binary-amd64/Packages.gz
-e1ccb1ebf9bde7b50ce38f6fc3f9d978  ./main/binary-amd64/Packages
+ e1ccb1ebf9bde7b50ce38f6fc3f9d978             1431 main/binary-amd64/Packages
+ a4e2e14f516d99d40fec4f13a5e1e285              403 main/binary-amd64/Packages.gz
+SHA1:
+ d2deeff3e7314548c452c7a259dea09cf868c66b             1431 main/binary-amd64/Packages
+ 1086d8f9974e80fb8f4689758d5c07b1ae52c8ef              403 main/binary-amd64/Packages.gz
 SHA256:
-4e2b90d79061562cac462a6510a7492c4874aad3b0b51869be47e7687d1fb578  ./main/binary-amd64/Packages.gz
-47ef7d8866a092ef6d6f8cc974dd9e251e481fcc487de2cfb5b22bf41857cc58  ./main/binary-amd64/Packages
+ 47ef7d8866a092ef6d6f8cc974dd9e251e481fcc487de2cfb5b22bf41857cc58             1431 main/binary-amd64/Packages
+ 9b1f36db5c839896dea1489b30b3f2459e4a951a8398c9de95bcbde778f99959              403 main/binary-amd64/Packages.gz
 -----BEGIN PGP SIGNATURE-----
 
-iHUEARYKAB0WIQQrmMakwzX6K9HoqJ6ySiPMt+FuNgUCaKcDwAAKCRCySiPMt+Fu
-NvdHAQDc/bdcQ1hxYyfED1SAjqYaGwzhKU4wGrw5aBhNhOecgwEAscTB/jYD2yPh
-vUxId8EJxoDVHE1pUcyI6lhme3lGzQU=
-=wU4K
+iHUEARYKAB0WIQQrmMakwzX6K9HoqJ6ySiPMt+FuNgUCaKcPPgAKCRCySiPMt+Fu
+NhWRAP0URk+79PnvfvWc622k+n1idLgLKFCt12pF8s5pJd8w0AD/ZkZdBsxK5VEM
+2SKz73TotuOswqRyvwW2/U0OW+yg6wk=
+=W2Qx
 -----END PGP SIGNATURE-----
