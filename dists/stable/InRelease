@@ -9,17 +9,17 @@ Version: 1.0
 Architectures: amd64
 Components: main
 Description: Statically linked Kubernetes CLI tools
-Date: Thu, 21 Aug 2025 11:18:15 +0000
+Date: Thu, 21 Aug 2025 11:18:50 +0000
 MD5Sum:
-f5c5386768c529fa64674a82fa23c7e8  ./main/binary-amd64/Packages.gz
+f211b1780e1e2c1049ede56c523d0886  ./main/binary-amd64/Packages.gz
 e1ccb1ebf9bde7b50ce38f6fc3f9d978  ./main/binary-amd64/Packages
 SHA256:
-c23427cafa60562c6101d5fe2b7a3d5c733107d7dc99edcfa9437f2a53d79a33  ./main/binary-amd64/Packages.gz
+db27476ab914fbb4698cea19ea55105aedcf355408cf323312a13ea334ef9c78  ./main/binary-amd64/Packages.gz
 47ef7d8866a092ef6d6f8cc974dd9e251e481fcc487de2cfb5b22bf41857cc58  ./main/binary-amd64/Packages
 -----BEGIN PGP SIGNATURE-----
 
-iHUEARYKAB0WIQQrmMakwzX6K9HoqJ6ySiPMt+FuNgUCaKcAeAAKCRCySiPMt+Fu
-NgiKAQC/6o/09rc89GwB0nrrspHeAgEtxT++Bnt5rA+FmIigdQD7B0zVFD7E+huU
-FXvU63abblzzdVXhvdR+BwiPO4cRvA8=
-=bqLU
+iHUEARYKAB0WIQQrmMakwzX6K9HoqJ6ySiPMt+FuNgUCaKcAmwAKCRCySiPMt+Fu
+NtQ+AP4ubex3V2w2RdfGxquxJp58Ro1W9b5FnvsUOmufa0AoggEA42QvAWRNKMOI
+W3i4QrWfbrdNSeyy2DOWz8xUg9CyNgg=
+=E/Tp
 -----END PGP SIGNATURE-----
