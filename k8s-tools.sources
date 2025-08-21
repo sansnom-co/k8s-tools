@@ -1,0 +1,5 @@
+Types: deb
+URIs: https://sansnom-co.github.io/k8s-tools
+Suites: stable
+Components: main
+Signed-By: /usr/share/keyrings/k8s-tools-archive-keyring.gpg

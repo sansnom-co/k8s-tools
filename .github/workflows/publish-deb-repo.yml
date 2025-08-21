@@ -104,29 +104,10 @@ jobs:
 
       - name: Create Release file
         run: |
+          cp main/scripts/create-release-file.sh .
+          chmod +x create-release-file.sh
           cd gh-pages/dists/stable
-          cat > Release << EOF
-          Origin: sansnom-co
-          Label: K8s Tools
-          Suite: stable
-          Codename: stable
-          Version: 1.0
-          Architectures: amd64
-          Components: main
-          Description: Statically linked Kubernetes CLI tools
-          Date: $(date -Ru)
-          EOF
-          
-          # Add checksums
-          echo "MD5Sum:" >> Release
-          find main -type f | while read -r file; do
-            md5sum "$file" | sed 's|main/|./main/|' >> Release
-          done
-          
-          echo "SHA256:" >> Release
-          find main -type f | while read -r file; do
-            sha256sum "$file" | sed 's|main/|./main/|' >> Release
-          done
+          ../../../create-release-file.sh .
 
       - name: Sign Release file
         run: |
