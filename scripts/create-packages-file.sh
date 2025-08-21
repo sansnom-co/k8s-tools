@@ -10,11 +10,15 @@ echo "Creating Packages file for $REPO..."
 # Clear output file
 > "$OUTPUT_FILE"
 
+# Debug: Check if we're getting releases
+echo "Fetching releases..."
+# Use curl instead of gh to avoid authentication issues in CI
+RELEASES=$(curl -s "https://api.github.com/repos/$REPO/releases")
+echo "Found $(echo "$RELEASES" | jq '. | length') releases"
+
 # Get all releases and create package entries
-gh api "repos/$REPO/releases" --paginate | jq -r '.[] | .assets[] | select(.name | endswith(".deb")) | {name, browser_download_url, size}' | while IFS= read -r line; do
-    name=$(echo "$line" | jq -r '.name')
-    url=$(echo "$line" | jq -r '.browser_download_url')
-    size=$(echo "$line" | jq -r '.size')
+echo "$RELEASES" | jq -r '.[] | .assets[] | select(.name | endswith(".deb")) | "\(.name)|\(.browser_download_url)|\(.size)"' | while IFS='|' read -r name url size; do
+    echo "Processing: $name"
     
     # Skip if any field is empty
     if [ -z "$name" ] || [ -z "$url" ] || [ -z "$size" ]; then
