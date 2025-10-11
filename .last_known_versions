@@ -3,5 +3,5 @@ helm=v3.19.0
 jq=jq-1.8.1
 skopeo=v1.20.0
 oras=v1.3.0
-cosign=v3.0.1
+cosign=v3.0.2
 flux=v2.7.2
