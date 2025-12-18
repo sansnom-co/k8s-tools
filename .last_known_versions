@@ -1,4 +1,4 @@
-kubectl=v1.34.3
+kubectl=v1.35.0
 helm=v4.0.4
 jq=jq-1.8.1
 skopeo=v1.21.0
