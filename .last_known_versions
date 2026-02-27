@@ -4,4 +4,4 @@ jq=jq-1.8.1
 skopeo=v1.22.0
 oras=v1.3.0
 cosign=v3.0.5
-flux=v2.8.0
+flux=v2.8.1
