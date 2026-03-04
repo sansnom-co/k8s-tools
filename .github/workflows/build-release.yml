@@ -41,7 +41,7 @@ jobs:
       - name: Install build prerequisites
         run: |
           sudo apt update
-          sudo apt install -y git golang build-essential pkg-config libc6-dev libgpgme-dev libdevmapper-dev libbtrfs-dev libseccomp-dev libassuan-dev libgpg-error-dev libpcsclite-dev musl-tools musl-dev
+          sudo apt install -y git golang build-essential pkg-config libc6-dev libgpgme-dev libdevmapper-dev libbtrfs-dev libseccomp-dev libassuan-dev libgpg-error-dev libpcsclite-dev
 
       - name: Make build script executable
         run: chmod +x ./build_static_tools.sh
@@ -92,14 +92,15 @@ jobs:
           name: trivy-scan-results
           path: trivy-scan-results.txt
 
-  # Job 3: Package .deb and .rpm with FPM
+  # Job 3: Package .deb and .rpm with nfpm
   package_binaries:
     runs-on: ubuntu-latest
     needs: scan_binaries # Depends on scan_binaries job
     outputs:
       version: ${{ needs.scan_binaries.outputs.version }}
-    # Package metadata as environment variables for easy maintenance
+    # Package metadata as environment variables consumed by nfpm.yaml
     env:
+      PACKAGE_VERSION: ${{ needs.scan_binaries.outputs.version }}
       PACKAGE_MAINTAINER: "Martin Stadler <martin@sansnom.co>"
       PACKAGE_URL: "https://github.com/${{ github.repository }}"
       PACKAGE_VENDOR: "sansnom-co"
@@ -114,11 +115,11 @@ jobs:
           name: static-binaries
           path: static_binaries/
 
-      - name: Install Ruby and FPM
+      - name: Install nfpm
         run: |
+          echo 'deb [trusted=yes] https://repo.goreleaser.com/apt/ /' | sudo tee /etc/apt/sources.list.d/goreleaser.list
           sudo apt update
-          sudo apt install -y ruby ruby-dev build-essential
-          sudo gem install fpm
+          sudo apt install -y nfpm
 
       - name: Create packages directory
         run: mkdir packages
@@ -130,46 +131,12 @@ jobs:
           ls -la ${GITHUB_WORKSPACE}/static_binaries/
 
       - name: Create .deb package
-        # DO NOT add --provides, --conflicts, or --replaces with comma-separated values
-        # Debian packages require space-separated or individual entries for these fields
         run: |
-          fpm -s dir -t deb \
-            -n k8s-tools \
-            -v "${{ needs.scan_binaries.outputs.version }}" \
-            --iteration 1 \
-            --architecture amd64 \
-            --maintainer "${PACKAGE_MAINTAINER}" \
-            --description "Statically linked Kubernetes CLI tools bundle including kubectl, helm, jq, skopeo, oras, cosign, and flux. All binaries are statically linked for maximum compatibility." \
-            --url "${PACKAGE_URL}" \
-            --license "${PACKAGE_LICENSE}" \
-            --vendor "${PACKAGE_VENDOR}" \
-            --category "utils" \
-            --depends "ca-certificates" \
-            --prefix /usr/local/bin \
-            --exclude .bitwarden-ssh-agent.sock \
-            -C static_binaries \
-            .
-          mv *.deb packages/
+          nfpm package --packager deb --target packages/
 
       - name: Create .rpm package
         run: |
-          fpm -s dir -t rpm \
-            -n k8s-tools \
-            -v "${{ needs.scan_binaries.outputs.version }}" \
-            --iteration 1 \
-            --architecture x86_64 \
-            --maintainer "${PACKAGE_MAINTAINER}" \
-            --description "Statically linked Kubernetes CLI tools bundle including kubectl, helm, jq, skopeo, oras, cosign, and flux. All binaries are statically linked for maximum compatibility." \
-            --url "${PACKAGE_URL}" \
-            --license "${PACKAGE_LICENSE}" \
-            --vendor "${PACKAGE_VENDOR}" \
-            --category "Applications/System" \
-            --depends "ca-certificates" \
-            --prefix /usr/local/bin \
-            --exclude .bitwarden-ssh-agent.sock \
-            -C static_binaries \
-            .
-          mv *.rpm packages/
+          nfpm package --packager rpm --target packages/
 
       - name: Upload packages artifact
         uses: actions/upload-artifact@v4
