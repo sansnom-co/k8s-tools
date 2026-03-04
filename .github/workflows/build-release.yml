@@ -6,6 +6,10 @@ on:
       - main # Trigger on push to main for development builds
     tags:
       - 'v*' # Trigger on new tags (e.g., v25.07.3)
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch: # Allow manual triggering from any branch
 
 jobs:
   # Job 1: Build Statically Linked Binaries
