@@ -35,15 +35,14 @@ if ! wget -q -O /tmp/k8s-tools.asc https://sansnom-co.github.io/k8s-tools/public
 fi
 
 echo "🔑 Installing GPG key..."
-# Store as ASCII-armored key directly (compatible with both APT 2.4+ and APT 3.0+/sqv)
-cp /tmp/k8s-tools.asc /usr/share/keyrings/sansnom-k8s-tools.asc
 rm -f /tmp/k8s-tools.asc
 
 echo "📝 Adding repository..."
 # Detect APT version to use appropriate source format
 APT_MAJOR=$(apt-get --version 2>/dev/null | head -1 | grep -oP '\d+' | head -1)
 if [ "${APT_MAJOR:-2}" -ge 3 ]; then
-    # APT 3.0+ (Debian trixie/forky): use deb822 format
+    # APT 3.0+ (Debian trixie/forky): use .asc directly (sqv compatible)
+    cp /tmp/k8s-tools.asc /usr/share/keyrings/sansnom-k8s-tools.asc
     cat > /etc/apt/sources.list.d/sansnom-k8s-tools.sources <<EOF
 Types: deb
 URIs: https://sansnom-co.github.io/k8s-tools
@@ -52,8 +51,11 @@ Components: main
 Signed-By: /usr/share/keyrings/sansnom-k8s-tools.asc
 EOF
 else
-    echo "deb [signed-by=/usr/share/keyrings/sansnom-k8s-tools.asc] https://sansnom-co.github.io/k8s-tools stable main" > /etc/apt/sources.list.d/sansnom-k8s-tools.list
+    # APT 2.x: dearmor to binary format for older systems
+    gpg --dearmor < /tmp/k8s-tools.asc > /usr/share/keyrings/sansnom-k8s-tools.gpg
+    echo "deb [signed-by=/usr/share/keyrings/sansnom-k8s-tools.gpg] https://sansnom-co.github.io/k8s-tools stable main" > /etc/apt/sources.list.d/sansnom-k8s-tools.list
 fi
+rm -f /tmp/k8s-tools.asc
 
 echo "🔄 Updating package list..."
 apt-get update

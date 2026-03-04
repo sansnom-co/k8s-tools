@@ -92,13 +92,13 @@ cat > index.html << 'ENDHTML'
         
         <h2>Quick Installation</h2>
         
-        <h3>For APT 2.x (Traditional format)</h3>
+        <h3>For APT 2.x (Debian bookworm, Ubuntu)</h3>
         <pre><code># Add the GPG key
-wget -O /usr/share/keyrings/sansnom-k8s-tools.asc \
-  <a href="/k8s-tools/public_key.asc">https://sansnom-co.github.io/k8s-tools/public_key.asc</a>
+wget -qO- <a href="/k8s-tools/public_key.asc">https://sansnom-co.github.io/k8s-tools/public_key.asc</a> | \
+  sudo gpg --dearmor -o /usr/share/keyrings/sansnom-k8s-tools.gpg
 
 # Add the repository
-echo "deb [signed-by=/usr/share/keyrings/sansnom-k8s-tools.asc] \
+echo "deb [signed-by=/usr/share/keyrings/sansnom-k8s-tools.gpg] \
   https://sansnom-co.github.io/k8s-tools stable main" | \
   sudo tee /etc/apt/sources.list.d/sansnom-k8s-tools.list
 
@@ -106,9 +106,9 @@ echo "deb [signed-by=/usr/share/keyrings/sansnom-k8s-tools.asc] \
 sudo apt update
 sudo apt install k8s-tools</code></pre>
 
-        <h3>For APT 3.0+ (deb822 format)</h3>
-        <pre><code># Add the GPG key
-sudo wget -O /usr/share/keyrings/sansnom-k8s-tools.asc \
+        <h3>For APT 3.0+ (Debian trixie/forky)</h3>
+        <pre><code># Add the GPG key (.asc format required for sqv/Sequoia)
+sudo wget -qO /usr/share/keyrings/sansnom-k8s-tools.asc \
   <a href="/k8s-tools/public_key.asc">https://sansnom-co.github.io/k8s-tools/public_key.asc</a>
 
 # Add the repository using deb822 format
