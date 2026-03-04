@@ -54,9 +54,7 @@ sudo apt install -y \
     libseccomp-dev \
     libassuan-dev \
     libgpg-error-dev \
-    libpcsclite-dev \
-    musl-tools \
-    musl-dev
+    libpcsclite-dev
 
 log_step "Setting up build environment in $BUILD_ROOT..."
 mkdir -p "$BUILD_ROOT"
@@ -104,17 +102,11 @@ CGO_ENABLED=0 go build \
 cp helm "$INSTALL_DIR/helm"
 cd "$BUILD_ROOT"
 
-# --- Build jq (using musl) ---
+# --- Download jq (pre-built static binary from upstream) ---
 JQ_VERSION="$(get_version jq)"
-log_step "Building jq ${JQ_VERSION} (statically linked with musl)..."
-git clone --depth 1 --branch "${JQ_VERSION}" https://github.com/jqlang/jq.git
-cd jq
-git submodule update --init --recursive
-autoreconf -fi
-./configure --host=x86_64-linux-musl --disable-shared CC=musl-gcc LDFLAGS="-static -static-libgcc"
-make
-cp jq "$INSTALL_DIR/jq"
-cd "$BUILD_ROOT"
+log_step "Downloading jq ${JQ_VERSION} static binary..."
+curl -fSL -o "$INSTALL_DIR/jq" \
+    "https://github.com/jqlang/jq/releases/download/${JQ_VERSION}/jq-linux-amd64"
 
 # --- Build skopeo ---
 SKOPEO_VERSION="$(get_version skopeo)"
