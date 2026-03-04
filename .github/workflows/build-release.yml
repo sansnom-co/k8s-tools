@@ -181,7 +181,7 @@ jobs:
   sign_packages:
     runs-on: ubuntu-latest
     needs: package_binaries # Depends on package_binaries job
-    if: startsWith(github.ref, 'refs/tags/v') # Only run on tags for release signing
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     outputs:
       version: ${{ needs.package_binaries.outputs.version }}
     steps:
@@ -222,7 +222,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     needs: sign_packages # Depends on sign_packages job
-    if: startsWith(github.ref, 'refs/tags/v') # Only run on tags for releases
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -238,20 +238,27 @@ jobs:
         run: |
           # Create release notes with installation instructions
           # Using proper markdown formatting for nice display on GitHub
-          RELEASE_NOTES="## K8s Tools ${{ needs.sign_packages.outputs.version }}
+          VERSION="${{ needs.sign_packages.outputs.version }}"
+          # Use tag name for tag pushes, otherwise create a tag from the version
+          RELEASE_TAG="${{ github.ref_name }}"
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            RELEASE_TAG="v${VERSION}"
+          fi
+
+          RELEASE_NOTES="## K8s Tools ${VERSION}
 
           ### Installation
 
           #### Debian/Ubuntu:
           \`\`\`bash
-          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/k8s-tools_${{ needs.sign_packages.outputs.version }}-1_amd64.deb
-          sudo dpkg -i k8s-tools_${{ needs.sign_packages.outputs.version }}-1_amd64.deb
+          wget https://github.com/${{ github.repository }}/releases/download/${RELEASE_TAG}/k8s-tools_${VERSION}-1_amd64.deb
+          sudo dpkg -i k8s-tools_${VERSION}-1_amd64.deb
           \`\`\`
 
           #### RHEL/Fedora:
           \`\`\`bash
-          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/k8s-tools-${{ needs.sign_packages.outputs.version }}-1.x86_64.rpm
-          sudo rpm -i k8s-tools-${{ needs.sign_packages.outputs.version }}-1.x86_64.rpm
+          wget https://github.com/${{ github.repository }}/releases/download/${RELEASE_TAG}/k8s-tools-${VERSION}-1.x86_64.rpm
+          sudo rpm -i k8s-tools-${VERSION}-1.x86_64.rpm
           \`\`\`
 
           ### Included Tools
@@ -266,19 +273,17 @@ jobs:
           ### Verify Signatures
           All packages are GPG signed. Download the .asc files to verify."
 
-          # Check if release already exists for this tag
-          if gh release view ${{ github.ref_name }} --repo ${{ github.repository }} > /dev/null 2>&1; then
+          # Check if release already exists
+          if gh release view "${RELEASE_TAG}" --repo ${{ github.repository }} > /dev/null 2>&1; then
             echo "Release already exists, will update it"
-            # Update the release notes if release exists
-            gh release edit ${{ github.ref_name }} \
+            gh release edit "${RELEASE_TAG}" \
               --repo ${{ github.repository }} \
               --notes "$RELEASE_NOTES"
           else
             echo "Creating new release"
-            # Create new release with our formatted notes
-            gh release create ${{ github.ref_name }} \
+            gh release create "${RELEASE_TAG}" \
               --repo ${{ github.repository }} \
-              --title "K8s Tools ${{ needs.sign_packages.outputs.version }}" \
+              --title "K8s Tools ${VERSION}" \
               --notes "$RELEASE_NOTES"
           fi
         env:
@@ -287,13 +292,16 @@ jobs:
       # Upload all the packages and their signatures to the release
       - name: Upload Release Assets
         run: |
+          VERSION="${{ needs.sign_packages.outputs.version }}"
+          RELEASE_TAG="${{ github.ref_name }}"
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            RELEASE_TAG="v${VERSION}"
+          fi
+
           cd packages/
-          # Upload each file (packages and signatures)
           for file in *; do
-            echo "Uploading $file to release ${{ github.ref_name }}"
-            # The --clobber flag will overwrite existing assets with the same name
-            # This is useful if you need to re-run the workflow
-            gh release upload ${{ github.ref_name }} "$file" \
+            echo "Uploading $file to release ${RELEASE_TAG}"
+            gh release upload "${RELEASE_TAG}" "$file" \
               --repo ${{ github.repository }} \
               --clobber
           done
