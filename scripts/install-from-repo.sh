@@ -35,11 +35,25 @@ if ! wget -q -O /tmp/k8s-tools.asc https://sansnom-co.github.io/k8s-tools/public
 fi
 
 echo "🔑 Installing GPG key..."
-gpg --dearmor < /tmp/k8s-tools.asc > /usr/share/keyrings/sansnom-k8s-tools.gpg
+# Store as ASCII-armored key directly (compatible with both APT 2.4+ and APT 3.0+/sqv)
+cp /tmp/k8s-tools.asc /usr/share/keyrings/sansnom-k8s-tools.asc
 rm -f /tmp/k8s-tools.asc
 
 echo "📝 Adding repository..."
-echo "deb [signed-by=/usr/share/keyrings/sansnom-k8s-tools.gpg] https://sansnom-co.github.io/k8s-tools stable main" > /etc/apt/sources.list.d/sansnom-k8s-tools.list
+# Detect APT version to use appropriate source format
+APT_MAJOR=$(apt-get --version 2>/dev/null | head -1 | grep -oP '\d+' | head -1)
+if [ "${APT_MAJOR:-2}" -ge 3 ]; then
+    # APT 3.0+ (Debian trixie/forky): use deb822 format
+    cat > /etc/apt/sources.list.d/sansnom-k8s-tools.sources <<EOF
+Types: deb
+URIs: https://sansnom-co.github.io/k8s-tools
+Suites: stable
+Components: main
+Signed-By: /usr/share/keyrings/sansnom-k8s-tools.asc
+EOF
+else
+    echo "deb [signed-by=/usr/share/keyrings/sansnom-k8s-tools.asc] https://sansnom-co.github.io/k8s-tools stable main" > /etc/apt/sources.list.d/sansnom-k8s-tools.list
+fi
 
 echo "🔄 Updating package list..."
 apt-get update

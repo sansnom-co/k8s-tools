@@ -94,30 +94,30 @@ cat > index.html << 'ENDHTML'
         
         <h3>For APT 2.x (Traditional format)</h3>
         <pre><code># Add the GPG key
-wget -O- <a href="/k8s-tools/public_key.asc">https://sansnom-co.github.io/k8s-tools/public_key.asc</a> | \
-  sudo gpg --dearmor -o /usr/share/keyrings/sansnom-k8s-tools.gpg
+wget -O /usr/share/keyrings/sansnom-k8s-tools.asc \
+  <a href="/k8s-tools/public_key.asc">https://sansnom-co.github.io/k8s-tools/public_key.asc</a>
 
 # Add the repository
-echo "deb [signed-by=/usr/share/keyrings/sansnom-k8s-tools.gpg] \
+echo "deb [signed-by=/usr/share/keyrings/sansnom-k8s-tools.asc] \
   https://sansnom-co.github.io/k8s-tools stable main" | \
   sudo tee /etc/apt/sources.list.d/sansnom-k8s-tools.list
 
 # Update and install
 sudo apt update
 sudo apt install k8s-tools</code></pre>
-        
+
         <h3>For APT 3.0+ (deb822 format)</h3>
         <pre><code># Add the GPG key
-wget -O- <a href="/k8s-tools/public_key.asc">https://sansnom-co.github.io/k8s-tools/public_key.asc</a> | \
-  sudo gpg --dearmor -o /usr/share/keyrings/sansnom-k8s-tools.gpg
+sudo wget -O /usr/share/keyrings/sansnom-k8s-tools.asc \
+  <a href="/k8s-tools/public_key.asc">https://sansnom-co.github.io/k8s-tools/public_key.asc</a>
 
 # Add the repository using deb822 format
-sudo tee /etc/apt/sources.list.d/sansnom-k8s-tools.sources << EOF
+sudo tee /etc/apt/sources.list.d/sansnom-k8s-tools.sources &lt;&lt; EOF
 Types: deb
 URIs: https://sansnom-co.github.io/k8s-tools
 Suites: stable
 Components: main
-Signed-By: /usr/share/keyrings/sansnom-k8s-tools.gpg
+Signed-By: /usr/share/keyrings/sansnom-k8s-tools.asc
 EOF
 
 # Update and install
