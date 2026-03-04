@@ -40,8 +40,4 @@ contents:
   - src: static_binaries/flux
     dst: /usr/local/bin/flux
 
-overrides:
-  deb:
-    section: utils
-  rpm:
-    group: Applications/System
+section: utils
