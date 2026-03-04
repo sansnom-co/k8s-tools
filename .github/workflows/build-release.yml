@@ -30,7 +30,9 @@ jobs:
           # If it's a tag, use the tag name as the version (e.g., v25.07.3 -> v25.07.3)
           # Otherwise, use CalVer + run number for development builds
           if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
-            VERSION="${{ github.ref_name }}"
+            # Strip 'v' prefix and normalize leading zeros to match dpkg versioning
+            RAW="${{ github.ref_name }}"
+            VERSION=$(echo "${RAW#v}" | awk -F. '{printf "%d.%d.%d", $1, $2, $3}')
           else
             # For main branch builds, use CalVer + run number as patch + 'dev' tag
             VERSION="${DATE_VERSION}.${GITHUB_RUN_NUMBER}-dev"
