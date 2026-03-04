@@ -1,0 +1,47 @@
+# nfpm configuration for k8s-tools package
+# https://nfpm.goreleaser.com/configuration/
+#
+# Required environment variables:
+#   PACKAGE_VERSION   - CalVer version (e.g. 25.08.1)
+#   PACKAGE_MAINTAINER - Maintainer name and email
+#   PACKAGE_URL       - Project homepage URL
+#   PACKAGE_VENDOR    - Package vendor name
+#   PACKAGE_LICENSE   - SPDX license identifier
+
+name: k8s-tools
+arch: amd64
+version: ${PACKAGE_VERSION}
+release: "1"
+maintainer: ${PACKAGE_MAINTAINER}
+description: >-
+  Statically linked Kubernetes CLI tools bundle including kubectl, helm, jq,
+  skopeo, oras, cosign, and flux. All binaries are statically linked for
+  maximum compatibility.
+homepage: ${PACKAGE_URL}
+license: ${PACKAGE_LICENSE}
+vendor: ${PACKAGE_VENDOR}
+
+depends:
+  - ca-certificates
+
+contents:
+  - src: static_binaries/kubectl
+    dst: /usr/local/bin/kubectl
+  - src: static_binaries/helm
+    dst: /usr/local/bin/helm
+  - src: static_binaries/jq
+    dst: /usr/local/bin/jq
+  - src: static_binaries/skopeo
+    dst: /usr/local/bin/skopeo
+  - src: static_binaries/oras
+    dst: /usr/local/bin/oras
+  - src: static_binaries/cosign
+    dst: /usr/local/bin/cosign
+  - src: static_binaries/flux
+    dst: /usr/local/bin/flux
+
+overrides:
+  deb:
+    section: utils
+  rpm:
+    group: Applications/System
