@@ -2,6 +2,6 @@ kubectl=v1.35.4
 helm=v4.1.4
 jq=jq-1.8.1
 skopeo=v1.22.2
-oras=v1.3.1
+oras=v1.3.2
 cosign=v3.0.6
 flux=v2.8.5
