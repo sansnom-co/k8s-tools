@@ -97,7 +97,7 @@ jobs:
           # Copy script and create Packages file
           cp main/scripts/create-packages-file.sh .
           chmod +x create-packages-file.sh
-          ./create-packages-file.sh "${{ github.repository }}" "gh-pages/dists/stable/main/binary-amd64/Packages"
+          ./create-packages-file.sh "${{ github.repository }}" "gh-pages/dists/stable/main/binary-amd64/Packages" "gh-pages/pool"
 
       - name: Compress Packages file
         run: |

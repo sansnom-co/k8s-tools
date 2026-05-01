@@ -2,10 +2,12 @@
 
 # Creates the APT Packages file by collecting .deb assets from all
 # per-tool and kube-essential GitHub releases.
-# Downloads each .deb to compute MD5/SHA1/SHA256 hashes required by APT.
+# Downloads each .deb, copies it into POOL_DIR, and uses a relative
+# Filename: path so APT constructs the correct download URL.
 
 REPO="${1:-sansnom-co/k8s-tools}"
 OUTPUT_FILE="${2:-Packages}"
+POOL_DIR="${3:-pool}"   # relative to CWD; will be served at repo root
 
 # Per-tool package metadata (matches packaging/*.yaml)
 declare -A TOOL_DEPENDS=(
@@ -76,16 +78,24 @@ for TOOL in $TOOLS; do
       continue
     fi
 
-    echo "  Downloading $name to compute hashes..."
+    echo "  Downloading $name..."
     if ! curl -fsSL -o "$TMPFILE" "$url"; then
       echo "  Warning: Failed to download $name, skipping"
       continue
     fi
 
+    # Compute hashes
     SIZE=$(stat -c%s "$TMPFILE")
     MD5=$(md5sum    "$TMPFILE" | cut -d' ' -f1)
     SHA1=$(sha1sum  "$TMPFILE" | cut -d' ' -f1)
     SHA256=$(sha256sum "$TMPFILE" | cut -d' ' -f1)
+
+    # Copy into pool using standard Debian layout
+    FIRST="${TOOL:0:1}"
+    DEST_DIR="${POOL_DIR}/main/${FIRST}/${TOOL}"
+    mkdir -p "$DEST_DIR"
+    cp "$TMPFILE" "${DEST_DIR}/${name}"
+    RELATIVE_PATH="${POOL_DIR}/main/${FIRST}/${TOOL}/${name}"
 
     {
       echo "Package: $TOOL"
@@ -99,12 +109,12 @@ for TOOL in $TOOLS; do
       echo "MD5sum: $MD5"
       echo "SHA1: $SHA1"
       echo "SHA256: $SHA256"
-      echo "Filename: $url"
+      echo "Filename: $RELATIVE_PATH"
       echo "Description: ${TOOL_DESC[$TOOL]:-Kubernetes tool}"
       echo ""
     } >> "$OUTPUT_FILE"
 
-    echo "  Added $name ($SIZE bytes)"
+    echo "  Added $name → $RELATIVE_PATH"
   done
 done
 
