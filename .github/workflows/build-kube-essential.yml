@@ -58,10 +58,11 @@ jobs:
 
           This installs: kubectl, helm, jq, skopeo, oras, cosign, flux."
 
-          if gh release view "$TAG" &>/dev/null; then
-            gh release upload "$TAG" packages/* --clobber
+          if gh release view "$TAG" --repo ${{ github.repository }} &>/dev/null; then
+            gh release upload "$TAG" packages/* --clobber --repo ${{ github.repository }}
           else
             gh release create "$TAG" packages/* \
+              --repo ${{ github.repository }} \
               --title "kube-essential ${{ inputs.version }}" \
               --notes "$NOTES"
           fi
