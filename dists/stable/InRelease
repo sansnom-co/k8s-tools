@@ -9,20 +9,20 @@ Version: 1.0
 Architectures: amd64
 Components: main
 Description: Statically linked Kubernetes CLI tools
-Date: Fri, 01 May 2026 01:15:13 +0000
+Date: Fri, 01 May 2026 01:16:49 +0000
 MD5Sum:
  6b2a37c44a979467f5a820a5799bee59             2791 main/binary-amd64/Packages
- 93e09b5be1c05d4e0580f0be12bceaf8              689 main/binary-amd64/Packages.gz
+ e16e7590e40bad219ae938422d591ead              689 main/binary-amd64/Packages.gz
 SHA1:
  abf95c4e89df94872db6898eddeb28c63d6a8261             2791 main/binary-amd64/Packages
- ebfde5b1ee4200c3d183a423955b920c83836ed5              689 main/binary-amd64/Packages.gz
+ da5b03a81cbf100e49aaf222017128b2e1be925d              689 main/binary-amd64/Packages.gz
 SHA256:
  1b5ed38a239c6f31a6ab8567fd93f51d04b3d096730909c0944ec22a6a7dba3b             2791 main/binary-amd64/Packages
- 1a2f9154658f9a2ca49bb4e5a15501404706458c29655ad9eca38559b5a66625              689 main/binary-amd64/Packages.gz
+ 534639a4df6f7cdc74c673343ef7497db49da287cc59a6b061bccc0dbfb32300              689 main/binary-amd64/Packages.gz
 -----BEGIN PGP SIGNATURE-----
 
-iHUEARYKAB0WIQQrmMakwzX6K9HoqJ6ySiPMt+FuNgUCafP+ogAKCRCySiPMt+Fu
-Nv1pAP4riLPcIzC3Slu/wyaQl6uAU6EsRb7lWv/hggIZHgIhmgEApLvCbGz4pKg7
-UkuJJT6pPrcZOQVn8zoAj2vRlRHTFAg=
-=3lzE
+iHUEARYKAB0WIQQrmMakwzX6K9HoqJ6ySiPMt+FuNgUCafP/AgAKCRCySiPMt+Fu
+NltMAQC3hibDkH5TQFW/yp0CfMwd40X8ovGxztjbkrrJ0pLZHwD+JKi+M+1Z5WBj
+ekjwNg67veB11/+84qAQcG1UXQD1YwY=
+=bCH8
 -----END PGP SIGNATURE-----
