@@ -42,9 +42,27 @@ jobs:
           name: ${{ inputs.tool }}-binary
           path: static_binaries/${{ inputs.tool }}
 
-  scan:
+  test:
     runs-on: ubuntu-latest
     needs: build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download binary artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.tool }}-binary
+          path: static_binaries/
+
+      - name: Run binary tests
+        run: |
+          chmod +x scripts/test-binary.sh
+          bash scripts/test-binary.sh ${{ inputs.tool }} ${{ inputs.version }}
+
+  scan:
+    runs-on: ubuntu-latest
+    needs: test
     steps:
       - name: Download binary artifact
         uses: actions/download-artifact@v4

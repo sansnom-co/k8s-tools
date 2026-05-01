@@ -175,5 +175,10 @@ esac
 
 chmod +x "$INSTALL_DIR/$TOOL"
 log_step "Verifying $TOOL..."
-ldd "$INSTALL_DIR/$TOOL" || true
+LDD_OUT=$(ldd "$INSTALL_DIR/$TOOL" 2>&1 || true)
+echo "$LDD_OUT"
+if ! echo "$LDD_OUT" | grep -q "not a dynamic executable"; then
+    echo "ERROR: $TOOL binary has dynamic dependencies" >&2
+    exit 1
+fi
 log_step "$TOOL built successfully → $INSTALL_DIR/$TOOL"
