@@ -4,53 +4,19 @@
 # per-tool and kube-essential GitHub releases.
 # Downloads each .deb, copies it into POOL_DIR, and uses a relative
 # Filename: path so APT constructs the correct download URL.
+#
+# Version, Architecture, and Depends are read directly from each .deb
+# control file (via dpkg-deb --field) to guarantee they match what dpkg
+# records on install — preventing the apt upgrade re-install loop.
 
 REPO="${1:-sansnom-co/k8s-tools}"
 OUTPUT_FILE="${2:-Packages}"
 POOL_DIR="${3:-pool}"    # physical path where .deb files are written
 POOL_URL="${4:-$POOL_DIR}"  # URL-relative path used in Filename: (no checkout prefix)
 
-# Per-tool package metadata (matches packaging/*.yaml)
-declare -A TOOL_DEPENDS=(
-  [kubectl]="ca-certificates"
-  [helm]="ca-certificates"
-  [jq]=""
-  [skopeo]="ca-certificates"
-  [oras]="ca-certificates"
-  [cosign]="ca-certificates"
-  [flux]="ca-certificates"
-  [kube-essential]="kubectl, helm, jq, skopeo, oras, cosign, flux"
-  [k8s-tools]="kube-essential"
-)
-
-declare -A TOOL_DESC=(
-  [kubectl]="Kubernetes command-line tool (statically linked)"
-  [helm]="The Kubernetes Package Manager (statically linked)"
-  [jq]="Command-line JSON processor (statically linked)"
-  [skopeo]="Container image inspection and copying tool (statically linked)"
-  [oras]="OCI Registry As Storage CLI (statically linked)"
-  [cosign]="Container signing and verification tool (statically linked)"
-  [flux]="GitOps toolkit for Kubernetes (statically linked)"
-  [kube-essential]="Meta-package: installs all essential Kubernetes CLI tools"
-  [k8s-tools]="DEPRECATED: Replaced by kube-essential"
-)
-
-declare -A TOOL_ARCH=(
-  [kubectl]="amd64"
-  [helm]="amd64"
-  [jq]="amd64"
-  [skopeo]="amd64"
-  [oras]="amd64"
-  [cosign]="amd64"
-  [flux]="amd64"
-  [kube-essential]="all"
-  [k8s-tools]="all"
-)
-
 echo "Creating Packages file for $REPO..."
 > "$OUTPUT_FILE"
 
-MAINTAINER="Martin Stadler <martin@sansnom.co>"
 TOOLS="kubectl helm jq skopeo oras cosign flux kube-essential k8s-tools"
 TMPFILE=$(mktemp /tmp/apt-deb-XXXXXX.deb)
 trap 'rm -f "$TMPFILE"' EXIT
@@ -69,19 +35,22 @@ for TOOL in $TOOLS; do
   | while IFS='|' read -r name url; do
     [[ -z "$name" || -z "$url" ]] && continue
 
-    # Extract version from filename: tool_version_arch.deb → version
-    version=$(echo "$name" | sed -n "s/${TOOL}_\(.*\)_${TOOL_ARCH[$TOOL]:-amd64}\.deb/\1/p")
-    if [ -z "$version" ]; then
-      version=$(echo "$name" | sed -n "s/${TOOL}_\(.*\)_all\.deb/\1/p")
-    fi
-    if [ -z "$version" ]; then
-      echo "  Warning: Could not extract version from $name, skipping"
-      continue
-    fi
-
     echo "  Downloading $name..."
     if ! curl -fsSL -o "$TMPFILE" "$url"; then
       echo "  Warning: Failed to download $name, skipping"
+      continue
+    fi
+
+    # Read metadata directly from the .deb control — this is the authoritative
+    # source and guarantees the Packages file matches what dpkg records on install.
+    VERSION=$(dpkg-deb --field "$TMPFILE" Version 2>/dev/null)
+    ARCH=$(dpkg-deb --field "$TMPFILE" Architecture 2>/dev/null)
+    DEPS=$(dpkg-deb --field "$TMPFILE" Depends 2>/dev/null || true)
+    MAINTAINER=$(dpkg-deb --field "$TMPFILE" Maintainer 2>/dev/null)
+    DESCRIPTION=$(dpkg-deb --field "$TMPFILE" Description 2>/dev/null | head -1)
+
+    if [[ -z "$VERSION" || -z "$ARCH" ]]; then
+      echo "  Warning: Could not read control fields from $name, skipping"
       continue
     fi
 
@@ -100,10 +69,10 @@ for TOOL in $TOOLS; do
 
     {
       echo "Package: $TOOL"
-      echo "Version: $version"
-      echo "Architecture: ${TOOL_ARCH[$TOOL]:-amd64}"
+      echo "Version: $VERSION"
+      echo "Architecture: $ARCH"
       echo "Maintainer: $MAINTAINER"
-      [[ -n "${TOOL_DEPENDS[$TOOL]:-}" ]] && echo "Depends: ${TOOL_DEPENDS[$TOOL]}"
+      [[ -n "$DEPS" ]] && echo "Depends: $DEPS"
       echo "Section: utils"
       echo "Priority: optional"
       echo "Size: $SIZE"
@@ -111,11 +80,11 @@ for TOOL in $TOOLS; do
       echo "SHA1: $SHA1"
       echo "SHA256: $SHA256"
       echo "Filename: $RELATIVE_PATH"
-      echo "Description: ${TOOL_DESC[$TOOL]:-Kubernetes tool}"
+      echo "Description: ${DESCRIPTION:-Kubernetes tool}"
       echo ""
     } >> "$OUTPUT_FILE"
 
-    echo "  Added $name → $RELATIVE_PATH"
+    echo "  Added $name (v${VERSION} ${ARCH}) → $RELATIVE_PATH"
   done
 done
 

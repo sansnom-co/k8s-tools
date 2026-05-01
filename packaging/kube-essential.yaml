@@ -14,11 +14,11 @@ description: >-
   Like build-essential but for Kubernetes — pulls in kubectl, helm,
   jq, skopeo, oras, cosign, and flux as individual versioned packages.
 depends:
-  - kubectl
-  - helm
-  - jq
-  - skopeo
-  - oras
-  - cosign
-  - flux
+  - kubectl (>= ${KUBECTL_VERSION})
+  - helm (>= ${HELM_VERSION})
+  - jq (>= ${JQ_VERSION})
+  - skopeo (>= ${SKOPEO_VERSION})
+  - oras (>= ${ORAS_VERSION})
+  - cosign (>= ${COSIGN_VERSION})
+  - flux (>= ${FLUX_VERSION})
 section: utils

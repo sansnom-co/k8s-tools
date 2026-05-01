@@ -25,6 +25,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y nfpm
 
+      - name: Load tool versions from .last_known_versions
+        run: |
+          while IFS='=' read -r key val; do
+            [[ -z "$key" || -z "$val" ]] && continue
+            bare="${val#v}"
+            bare="${bare#jq-}"
+            echo "$(echo "$key" | tr '[:lower:]' '[:upper:]')_VERSION=$bare" >> "$GITHUB_ENV"
+          done < .last_known_versions
+
       - name: Build meta-package
         run: |
           mkdir -p packages
