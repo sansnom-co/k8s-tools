@@ -9,7 +9,7 @@ Size: 18021700
 MD5sum: 78d3b24b041484443f384223dc0a7c4a
 SHA1: d76a521645707af05641545e1f3aed4d75448099
 SHA256: 9801494fd5f1ca5b619c028f573909195bc69c6eb2c749012c10883fcd2257ae
-Filename: gh-pages/pool/main/k/kubectl/kubectl_1.36.0-1_amd64.deb
+Filename: pool/main/k/kubectl/kubectl_1.36.0-1_amd64.deb
 Description: Kubernetes command-line tool (statically linked)
 
 Package: helm
@@ -23,7 +23,7 @@ Size: 19822684
 MD5sum: a810a38067ce932c00a0f2c68499a5ee
 SHA1: fce9368d2c0a80739f55380cf619d74f8f23f36a
 SHA256: de9b388f9ffa14fc64bd4680c9f48c693b55ae068d3618e1cde76427560d0ee5
-Filename: gh-pages/pool/main/h/helm/helm_4.1.4-1_amd64.deb
+Filename: pool/main/h/helm/helm_4.1.4-1_amd64.deb
 Description: The Kubernetes Package Manager (statically linked)
 
 Package: jq
@@ -36,7 +36,7 @@ Size: 1024606
 MD5sum: fe461886831c49b830edeb09c5a6a047
 SHA1: b9f212149c06bf74e537659c0c49a9c8ba208e95
 SHA256: d2ef00cb62c77f58b801b694c4573a5dbc21b844ba0d943da177cd9baee935fe
-Filename: gh-pages/pool/main/j/jq/jq_1.8.1-1_amd64.deb
+Filename: pool/main/j/jq/jq_1.8.1-1_amd64.deb
 Description: Command-line JSON processor (statically linked)
 
 Package: skopeo
@@ -50,7 +50,7 @@ Size: 11128380
 MD5sum: f8a209e5c9c46939baeb411d069a22de
 SHA1: 374609a0d83c3a801a05f70b09c476dfa839ae5c
 SHA256: eb8cddd2e95f48ae208052767694da9bfab1efb1046c581b95f2e81dfbd8d155
-Filename: gh-pages/pool/main/s/skopeo/skopeo_1.22.2-1_amd64.deb
+Filename: pool/main/s/skopeo/skopeo_1.22.2-1_amd64.deb
 Description: Container image inspection and copying tool (statically linked)
 
 Package: oras
@@ -64,7 +64,7 @@ Size: 4727972
 MD5sum: fdb6cba5bd239146cec7c938fdb82589
 SHA1: fe854e359b9bf6e2f71e5cab4d2aadda69292ed1
 SHA256: 5ebccfa61636349ac453a54ed2febbf2e6c7253fce819c2f6ad59dde017235f8
-Filename: gh-pages/pool/main/o/oras/oras_1.3.2-1_amd64.deb
+Filename: pool/main/o/oras/oras_1.3.2-1_amd64.deb
 Description: OCI Registry As Storage CLI (statically linked)
 
 Package: cosign
@@ -78,7 +78,7 @@ Size: 29301738
 MD5sum: fb21270dedd80a8ad29c52f55c06d7a5
 SHA1: bfc37786a84408a8be56bf31bf3c0b8cee6fc46a
 SHA256: 9208ffd0a5dc9ee1ee847b16138a128e38819f53569e8d46808207aef874d916
-Filename: gh-pages/pool/main/c/cosign/cosign_3.0.6-1_amd64.deb
+Filename: pool/main/c/cosign/cosign_3.0.6-1_amd64.deb
 Description: Container signing and verification tool (statically linked)
 
 Package: flux
@@ -92,7 +92,7 @@ Size: 24185612
 MD5sum: d31a27c727eda72d647e3c29c83634d5
 SHA1: 6ea8bcdaa4dce3347316d059fcc6e51a231b9d74
 SHA256: a64793e8c2b6c955beef54916857afefce70ce96e056b65ec40f9c97ac215f40
-Filename: gh-pages/pool/main/f/flux/flux_2.8.6-1_amd64.deb
+Filename: pool/main/f/flux/flux_2.8.6-1_amd64.deb
 Description: GitOps toolkit for Kubernetes (statically linked)
 
 Package: kube-essential
@@ -106,6 +106,6 @@ Size: 644
 MD5sum: adf1d97b490759962fafa227865da5c8
 SHA1: c1844e92e2be2fd2af1b222c4ccbba768f10b4de
 SHA256: 982d8fc21ace0ef9468177dd2c00597d1abb8e8673807ea14fcb713d69481627
-Filename: gh-pages/pool/main/k/kube-essential/kube-essential_26.5.0-1_all.deb
+Filename: pool/main/k/kube-essential/kube-essential_26.5.0-1_all.deb
 Description: Meta-package: installs all essential Kubernetes CLI tools
 
