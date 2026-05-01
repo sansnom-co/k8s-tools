@@ -2,7 +2,9 @@ name: Publish Debian Repository
 
 on:
   workflow_run:
-    workflows: ["Build, Scan, Package, Sign, and Release K8s Tools"]
+    workflows:
+      - "Build Tool"
+      - "Build kube-essential"
     types:
       - completed
     branches:
