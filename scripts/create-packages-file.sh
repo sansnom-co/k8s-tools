@@ -2,6 +2,7 @@
 
 # Creates the APT Packages file by collecting .deb assets from all
 # per-tool and kube-essential GitHub releases.
+# Downloads each .deb to compute MD5/SHA1/SHA256 hashes required by APT.
 
 REPO="${1:-sansnom-co/k8s-tools}"
 OUTPUT_FILE="${2:-Packages}"
@@ -48,6 +49,8 @@ echo "Creating Packages file for $REPO..."
 
 MAINTAINER="Martin Stadler <martin@sansnom.co>"
 TOOLS="kubectl helm jq skopeo oras cosign flux kube-essential k8s-tools"
+TMPFILE=$(mktemp /tmp/apt-deb-XXXXXX.deb)
+trap 'rm -f "$TMPFILE"' EXIT
 
 # Fetch all releases once
 echo "Fetching all releases from GitHub API..."
@@ -59,22 +62,30 @@ for TOOL in $TOOLS; do
   # Find .deb assets from releases whose tag starts with "<tool>-"
   echo "$ALL_RELEASES" | jq -r \
     --arg prefix "${TOOL}-" \
-    '.[] | select(.tag_name | startswith($prefix)) | .assets[] | select(.name | endswith(".deb")) | "\(.name)|\(.browser_download_url)|\(.size)"' \
-  | while IFS='|' read -r name url size; do
-    [[ -z "$name" || -z "$url" || -z "$size" ]] && continue
-    echo "  Adding: $name"
+    '.[] | select(.tag_name | startswith($prefix)) | .assets[] | select(.name | endswith(".deb")) | "\(.name)|\(.browser_download_url)"' \
+  | while IFS='|' read -r name url; do
+    [[ -z "$name" || -z "$url" ]] && continue
 
-    # Extract version from filename: tool_version_arch.deb
-    # e.g. kubectl_1.36.0-1_amd64.deb -> 1.36.0-1
+    # Extract version from filename: tool_version_arch.deb → version
     version=$(echo "$name" | sed -n "s/${TOOL}_\(.*\)_${TOOL_ARCH[$TOOL]:-amd64}\.deb/\1/p")
     if [ -z "$version" ]; then
-      # Try 'all' arch for meta-packages
       version=$(echo "$name" | sed -n "s/${TOOL}_\(.*\)_all\.deb/\1/p")
     fi
     if [ -z "$version" ]; then
       echo "  Warning: Could not extract version from $name, skipping"
       continue
     fi
+
+    echo "  Downloading $name to compute hashes..."
+    if ! curl -fsSL -o "$TMPFILE" "$url"; then
+      echo "  Warning: Failed to download $name, skipping"
+      continue
+    fi
+
+    SIZE=$(stat -c%s "$TMPFILE")
+    MD5=$(md5sum    "$TMPFILE" | cut -d' ' -f1)
+    SHA1=$(sha1sum  "$TMPFILE" | cut -d' ' -f1)
+    SHA256=$(sha256sum "$TMPFILE" | cut -d' ' -f1)
 
     {
       echo "Package: $TOOL"
@@ -84,11 +95,16 @@ for TOOL in $TOOLS; do
       [[ -n "${TOOL_DEPENDS[$TOOL]:-}" ]] && echo "Depends: ${TOOL_DEPENDS[$TOOL]}"
       echo "Section: utils"
       echo "Priority: optional"
-      echo "Size: $size"
+      echo "Size: $SIZE"
+      echo "MD5sum: $MD5"
+      echo "SHA1: $SHA1"
+      echo "SHA256: $SHA256"
       echo "Filename: $url"
       echo "Description: ${TOOL_DESC[$TOOL]:-Kubernetes tool}"
       echo ""
     } >> "$OUTPUT_FILE"
+
+    echo "  Added $name ($SIZE bytes)"
   done
 done
 
