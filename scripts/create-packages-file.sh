@@ -7,7 +7,8 @@
 
 REPO="${1:-sansnom-co/k8s-tools}"
 OUTPUT_FILE="${2:-Packages}"
-POOL_DIR="${3:-pool}"   # relative to CWD; will be served at repo root
+POOL_DIR="${3:-pool}"    # physical path where .deb files are written
+POOL_URL="${4:-$POOL_DIR}"  # URL-relative path used in Filename: (no checkout prefix)
 
 # Per-tool package metadata (matches packaging/*.yaml)
 declare -A TOOL_DEPENDS=(
@@ -95,7 +96,7 @@ for TOOL in $TOOLS; do
     DEST_DIR="${POOL_DIR}/main/${FIRST}/${TOOL}"
     mkdir -p "$DEST_DIR"
     cp "$TMPFILE" "${DEST_DIR}/${name}"
-    RELATIVE_PATH="${POOL_DIR}/main/${FIRST}/${TOOL}/${name}"
+    RELATIVE_PATH="${POOL_URL}/main/${FIRST}/${TOOL}/${name}"
 
     {
       echo "Package: $TOOL"
