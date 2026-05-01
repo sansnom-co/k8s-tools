@@ -9,20 +9,20 @@ Version: 1.0
 Architectures: amd64
 Components: main
 Description: Statically linked Kubernetes CLI tools
-Date: Fri, 01 May 2026 01:10:30 +0000
+Date: Fri, 01 May 2026 01:15:13 +0000
 MD5Sum:
- e15872687d07ee49268f20b34452a3c9             1695 main/binary-amd64/Packages
- cefd027210107236601c3441c1c7b1f6              494 main/binary-amd64/Packages.gz
+ 6b2a37c44a979467f5a820a5799bee59             2791 main/binary-amd64/Packages
+ 93e09b5be1c05d4e0580f0be12bceaf8              689 main/binary-amd64/Packages.gz
 SHA1:
- ccabe6a91fd07c9da7d374acad4c8262c2ba5731             1695 main/binary-amd64/Packages
- 2ebd9aa57f856e7b8c99b4a2ab6b476ad5fd0533              494 main/binary-amd64/Packages.gz
+ abf95c4e89df94872db6898eddeb28c63d6a8261             2791 main/binary-amd64/Packages
+ ebfde5b1ee4200c3d183a423955b920c83836ed5              689 main/binary-amd64/Packages.gz
 SHA256:
- fd6e67d19abfb7b8cec1c05de5b785143e6041b5c0bf72a097543b24b5c3ed6a             1695 main/binary-amd64/Packages
- ed0fdcd773418c78da44916d13f131393510e05c29f8fc86c9fb4a73e125158a              494 main/binary-amd64/Packages.gz
+ 1b5ed38a239c6f31a6ab8567fd93f51d04b3d096730909c0944ec22a6a7dba3b             2791 main/binary-amd64/Packages
+ 1a2f9154658f9a2ca49bb4e5a15501404706458c29655ad9eca38559b5a66625              689 main/binary-amd64/Packages.gz
 -----BEGIN PGP SIGNATURE-----
 
-iHUEARYKAB0WIQQrmMakwzX6K9HoqJ6ySiPMt+FuNgUCafP9hwAKCRCySiPMt+Fu
-Nt8SAQDpEGC+0n5BEgFUUDu+PiET0WuZK9l0MYbYHfnLOqp9cQEArVfAnlsQUj8L
-EQ9cdZvKnFlnw2PWAtt5CVOIhPigKQ8=
-=7n9V
+iHUEARYKAB0WIQQrmMakwzX6K9HoqJ6ySiPMt+FuNgUCafP+ogAKCRCySiPMt+Fu
+Nv1pAP4riLPcIzC3Slu/wyaQl6uAU6EsRb7lWv/hggIZHgIhmgEApLvCbGz4pKg7
+UkuJJT6pPrcZOQVn8zoAj2vRlRHTFAg=
+=3lzE
 -----END PGP SIGNATURE-----

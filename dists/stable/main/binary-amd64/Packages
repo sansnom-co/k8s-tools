@@ -52,3 +52,36 @@ Size: 4727972
 Filename: https://github.com/sansnom-co/k8s-tools/releases/download/oras-v1.3.2/oras_1.3.2-1_amd64.deb
 Description: OCI Registry As Storage CLI (statically linked)
 
+Package: cosign
+Version: 3.0.6-1
+Architecture: amd64
+Maintainer: Martin Stadler <martin@sansnom.co>
+Depends: ca-certificates
+Section: utils
+Priority: optional
+Size: 29301738
+Filename: https://github.com/sansnom-co/k8s-tools/releases/download/cosign-v3.0.6/cosign_3.0.6-1_amd64.deb
+Description: Container signing and verification tool (statically linked)
+
+Package: flux
+Version: 2.8.6-1
+Architecture: amd64
+Maintainer: Martin Stadler <martin@sansnom.co>
+Depends: ca-certificates
+Section: utils
+Priority: optional
+Size: 24185612
+Filename: https://github.com/sansnom-co/k8s-tools/releases/download/flux-v2.8.6/flux_2.8.6-1_amd64.deb
+Description: GitOps toolkit for Kubernetes (statically linked)
+
+Package: kube-essential
+Version: 26.5.0-1
+Architecture: all
+Maintainer: Martin Stadler <martin@sansnom.co>
+Depends: kubectl, helm, jq, skopeo, oras, cosign, flux
+Section: utils
+Priority: optional
+Size: 644
+Filename: https://github.com/sansnom-co/k8s-tools/releases/download/kube-essential-v26.05.0/kube-essential_26.5.0-1_all.deb
+Description: Meta-package: installs all essential Kubernetes CLI tools
+
