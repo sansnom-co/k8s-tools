@@ -1,0 +1,24 @@
+# nfpm config for kube-essential meta-package
+# Required env vars: KUBE_ESSENTIAL_VERSION, PACKAGE_MAINTAINER, PACKAGE_URL, PACKAGE_VENDOR, PACKAGE_LICENSE
+# KUBE_ESSENTIAL_VERSION uses CalVer (e.g. 25.05.0)
+name: kube-essential
+version: ${KUBE_ESSENTIAL_VERSION}
+release: "1"
+arch: all
+maintainer: ${PACKAGE_MAINTAINER}
+vendor: ${PACKAGE_VENDOR}
+homepage: ${PACKAGE_URL}
+license: ${PACKAGE_LICENSE}
+description: >-
+  Meta-package: installs all essential Kubernetes CLI tools.
+  Like build-essential but for Kubernetes — pulls in kubectl, helm,
+  jq, skopeo, oras, cosign, and flux as individual versioned packages.
+depends:
+  - kubectl
+  - helm
+  - jq
+  - skopeo
+  - oras
+  - cosign
+  - flux
+section: utils

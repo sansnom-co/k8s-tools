@@ -1,0 +1,67 @@
+name: Build kube-essential
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "CalVer version (e.g. 25.05.0)"
+        required: true
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    env:
+      PACKAGE_MAINTAINER: "Martin Stadler <martin@sansnom.co>"
+      PACKAGE_URL: "https://github.com/${{ github.repository }}"
+      PACKAGE_VENDOR: "sansnom-co"
+      PACKAGE_LICENSE: "Apache-2.0"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install nfpm
+        run: |
+          echo 'deb [trusted=yes] https://repo.goreleaser.com/apt/ /' | sudo tee /etc/apt/sources.list.d/goreleaser.list
+          sudo apt-get update
+          sudo apt-get install -y nfpm
+
+      - name: Build meta-package
+        run: |
+          mkdir -p packages
+          KUBE_ESSENTIAL_VERSION="${{ inputs.version }}" \
+            nfpm package -f packaging/kube-essential.yaml --packager deb --target packages/
+
+      - name: Import GPG key
+        run: |
+          echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
+
+      - name: Sign package
+        run: |
+          cd packages/
+          echo "${{ secrets.GPG_PASSPHRASE }}" | \
+            gpg --batch --yes --passphrase-fd 0 --pinentry-mode loopback \
+            --detach-sign kube-essential_*.deb
+
+      - name: Create or update GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="kube-essential-v${{ inputs.version }}"
+          NOTES="## kube-essential ${{ inputs.version }}
+
+          Meta-package that installs all essential Kubernetes CLI tools.
+
+          ### Install
+          \`\`\`bash
+          apt-get install kube-essential
+          \`\`\`
+
+          This installs: kubectl, helm, jq, skopeo, oras, cosign, flux."
+
+          if gh release view "$TAG" &>/dev/null; then
+            gh release upload "$TAG" packages/* --clobber
+          else
+            gh release create "$TAG" packages/* \
+              --title "kube-essential ${{ inputs.version }}" \
+              --notes "$NOTES"
+          fi

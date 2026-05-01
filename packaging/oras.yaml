@@ -1,0 +1,21 @@
+# nfpm config for oras package
+# Required env vars: TOOL_VERSION, PACKAGE_MAINTAINER, PACKAGE_URL, PACKAGE_VENDOR, PACKAGE_LICENSE
+name: oras
+version: ${TOOL_VERSION}
+release: "1"
+arch: amd64
+maintainer: ${PACKAGE_MAINTAINER}
+vendor: ${PACKAGE_VENDOR}
+homepage: ${PACKAGE_URL}
+license: ${PACKAGE_LICENSE}
+description: >-
+  OCI Registry As Storage CLI (statically linked).
+  Push and pull artifacts to and from OCI registries.
+depends:
+  - ca-certificates
+section: utils
+contents:
+  - src: static_binaries/oras
+    dst: /usr/local/bin/oras
+    file_info:
+      mode: 0755

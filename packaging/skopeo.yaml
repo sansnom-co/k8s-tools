@@ -1,0 +1,21 @@
+# nfpm config for skopeo package
+# Required env vars: TOOL_VERSION, PACKAGE_MAINTAINER, PACKAGE_URL, PACKAGE_VENDOR, PACKAGE_LICENSE
+name: skopeo
+version: ${TOOL_VERSION}
+release: "1"
+arch: amd64
+maintainer: ${PACKAGE_MAINTAINER}
+vendor: ${PACKAGE_VENDOR}
+homepage: ${PACKAGE_URL}
+license: ${PACKAGE_LICENSE}
+description: >-
+  Container image inspection and copying tool (statically linked).
+  Work with remote container image registries.
+depends:
+  - ca-certificates
+section: utils
+contents:
+  - src: static_binaries/skopeo
+    dst: /usr/local/bin/skopeo
+    file_info:
+      mode: 0755

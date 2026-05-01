@@ -1,0 +1,21 @@
+# nfpm config for helm package
+# Required env vars: TOOL_VERSION, PACKAGE_MAINTAINER, PACKAGE_URL, PACKAGE_VENDOR, PACKAGE_LICENSE
+name: helm
+version: ${TOOL_VERSION}
+release: "1"
+arch: amd64
+maintainer: ${PACKAGE_MAINTAINER}
+vendor: ${PACKAGE_VENDOR}
+homepage: ${PACKAGE_URL}
+license: ${PACKAGE_LICENSE}
+description: >-
+  The Kubernetes Package Manager (statically linked).
+  Helm helps you manage Kubernetes applications.
+depends:
+  - ca-certificates
+section: utils
+contents:
+  - src: static_binaries/helm
+    dst: /usr/local/bin/helm
+    file_info:
+      mode: 0755

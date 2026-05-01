@@ -1,0 +1,21 @@
+# nfpm config for kubectl package
+# Required env vars: TOOL_VERSION, PACKAGE_MAINTAINER, PACKAGE_URL, PACKAGE_VENDOR, PACKAGE_LICENSE
+name: kubectl
+version: ${TOOL_VERSION}
+release: "1"
+arch: amd64
+maintainer: ${PACKAGE_MAINTAINER}
+vendor: ${PACKAGE_VENDOR}
+homepage: ${PACKAGE_URL}
+license: ${PACKAGE_LICENSE}
+description: >-
+  Kubernetes command-line tool (statically linked).
+  Run commands against Kubernetes clusters.
+depends:
+  - ca-certificates
+section: utils
+contents:
+  - src: static_binaries/kubectl
+    dst: /usr/local/bin/kubectl
+    file_info:
+      mode: 0755

@@ -1,7 +1,7 @@
 name: Check Upstream Releases
 
 on:
-  workflow_dispatch: # Allow manual trigger
+  workflow_dispatch:
     inputs:
       debug:
         description: 'Enable debug logging'
@@ -17,6 +17,7 @@ jobs:
     outputs:
       has_updates: ${{ steps.check_updates.outputs.has_updates }}
       update_summary: ${{ steps.check_updates.outputs.update_summary }}
+      updated_tools: ${{ steps.check_updates.outputs.updated_tools }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -25,25 +26,21 @@ jobs:
         id: check_updates
         shell: bash
         run: |
-          # Initialize variables
           HAS_UPDATES=false
           UPDATE_SUMMARY=""
-          
-          # File to store last known versions
+          UPDATED_TOOLS=""
+
           VERSIONS_FILE=".last_known_versions"
-          
-          # If versions file doesn't exist, create it
           if [ ! -f "$VERSIONS_FILE" ]; then
             touch "$VERSIONS_FILE"
           fi
-          
-          # Function to get latest release from GitHub
+
           get_latest_release() {
             local repo=$1
             gh api repos/$repo/releases/latest --jq '.tag_name' 2>/dev/null || echo "unknown"
           }
-          
-          # Tools to check (format: tool:repo)
+
+          # Format: tool:repo
           TOOLS=(
             "kubectl:kubernetes/kubernetes"
             "helm:helm/helm"
@@ -53,39 +50,34 @@ jobs:
             "cosign:sigstore/cosign"
             "flux:fluxcd/flux2"
           )
-          
-          # Check each tool
+
           for tool_info in "${TOOLS[@]}"; do
             IFS=':' read -r tool repo <<< "$tool_info"
             echo "Checking $tool from $repo..."
-            
-            # Get latest release
+
             LATEST=$(get_latest_release "$repo")
             echo "Latest $tool release: $LATEST"
-            
-            # Get last known version
+
             LAST_KNOWN=$(grep "^$tool=" "$VERSIONS_FILE" | cut -d'=' -f2 || echo "")
-            
+
             if [ -z "$LAST_KNOWN" ]; then
-              # First time checking this tool
               echo "$tool=$LATEST" >> "$VERSIONS_FILE"
               UPDATE_SUMMARY+="- $tool: New tracking started at $LATEST\n"
             elif [ "$LATEST" != "$LAST_KNOWN" ] && [ "$LATEST" != "unknown" ]; then
-              # New version detected
               HAS_UPDATES=true
               UPDATE_SUMMARY+="- $tool: $LAST_KNOWN → $LATEST\n"
-              # Update the versions file
               sed -i "s/^$tool=.*/$tool=$LATEST/" "$VERSIONS_FILE"
+              UPDATED_TOOLS="${UPDATED_TOOLS} ${tool}=${LATEST}"
             fi
           done
-          
-          # Output results
-          echo "has_updates=$HAS_UPDATES" >> $GITHUB_OUTPUT
-          echo "update_summary<<EOF" >> $GITHUB_OUTPUT
-          echo -e "$UPDATE_SUMMARY" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-          
-          # Commit updated versions file if there are changes
+
+          echo "has_updates=$HAS_UPDATES" >> "$GITHUB_OUTPUT"
+          # Strip leading space from UPDATED_TOOLS
+          echo "updated_tools=${UPDATED_TOOLS# }" >> "$GITHUB_OUTPUT"
+          echo "update_summary<<EOF" >> "$GITHUB_OUTPUT"
+          echo -e "$UPDATE_SUMMARY" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
           if [ "$HAS_UPDATES" = "true" ] || [ -n "$UPDATE_SUMMARY" ]; then
             git config --local user.email "action@github.com"
             git config --local user.name "GitHub Action"
@@ -102,57 +94,85 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: ${{ github.ref }}
 
-  trigger_build:
+  trigger_builds:
     needs: check_releases
     if: needs.check_releases.outputs.has_updates == 'true'
     runs-on: ubuntu-latest
     steps:
-      - name: Get current date
-        id: date
-        run: echo "date=$(date +'%Y.%m')" >> $GITHUB_OUTPUT
-
-      - name: Create release tag
-        shell: bash
+      - name: Trigger per-tool builds
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Calculate next patch number
-          LATEST_TAG=$(gh api repos/${{ github.repository }}/releases/latest --jq '.tag_name' 2>/dev/null || echo "v0.0.0")
-          DATE_PREFIX="v${{ steps.date.outputs.date }}"
-          
-          # Extract patch number if the latest tag matches current month
-          if [[ $LATEST_TAG == $DATE_PREFIX.* ]]; then
-            PATCH=$(echo $LATEST_TAG | cut -d'.' -f3)
+          # updated_tools is space-separated "tool=version" pairs, e.g. "helm=v4.2.0 kubectl=v1.37.0"
+          for entry in ${{ needs.check_releases.outputs.updated_tools }}; do
+            TOOL="${entry%%=*}"
+            VERSION="${entry##*=}"
+            echo "Triggering build for $TOOL $VERSION"
+            gh workflow run build-tool.yml \
+              --repo ${{ github.repository }} \
+              --field tool="$TOOL" \
+              --field version="$VERSION"
+          done
+
+      - name: Calculate kube-essential CalVer
+        id: calver
+        run: |
+          YY=$(date +%y)
+          MM=$(date +%m)
+          DATE_PREFIX="${YY}.${MM}"
+
+          LATEST=$(gh api "repos/${{ github.repository }}/releases" \
+            --jq "[.[] | select(.tag_name | startswith(\"kube-essential-v${DATE_PREFIX}\"))] | first | .tag_name // \"\"" \
+            2>/dev/null || echo "")
+
+          if [[ -n "$LATEST" ]]; then
+            PATCH="${LATEST##*.}"
             NEXT_PATCH=$((PATCH + 1))
           else
             NEXT_PATCH=0
           fi
-          
-          NEW_TAG="${DATE_PREFIX}.${NEXT_PATCH}"
-          echo "Creating new release tag: $NEW_TAG"
-          
-          # Create release notes
-          UPDATE_SUMMARY="${{ needs.check_releases.outputs.update_summary }}"
-          RELEASE_NOTES=$(echo -e "## Automated Release - Upstream Updates\n\n${UPDATE_SUMMARY}\n\nThis release was automatically triggered due to upstream updates.")
-          
-          # Create the release (which will trigger the build workflow)
-          gh release create "$NEW_TAG" \
-            --repo ${{ github.repository }} \
-            --title "Release $NEW_TAG - Upstream Updates" \
-            --notes "$RELEASE_NOTES"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create issue for upstream updates
-        if: always()
-        shell: bash
+          echo "version=${DATE_PREFIX}.${NEXT_PATCH}" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Trigger kube-essential build
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          gh workflow run build-kube-essential.yml \
+            --repo ${{ github.repository }} \
+            --field version="${{ steps.calver.outputs.version }}"
+
+      - name: Create tracking issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Close any previously open upstream-update issues before creating a new one
+          gh issue list \
+            --repo ${{ github.repository }} \
+            --label "upstream-update,automated" \
+            --state open \
+            --json number \
+            --jq '.[].number' \
+          | xargs -r -I{} gh issue close {} \
+              --repo ${{ github.repository }} \
+              --comment "Superseded by a newer upstream update issue."
+
           ISSUE_TITLE="Upstream Updates Detected - $(date +'%Y-%m-%d')"
           UPDATE_SUMMARY="${{ needs.check_releases.outputs.update_summary }}"
-          ISSUE_BODY=$(echo -e "## Upstream Updates Summary\n\nThe following upstream releases were detected:\n\n${UPDATE_SUMMARY}\n\nA new release has been automatically created which will trigger the build process.\n\n### Next Steps\n- Monitor the build workflow for any issues\n- Test the new packages once built\n- Update documentation if needed\n\nThis issue was automatically created by the upstream release checker.")
-          
+          ISSUE_BODY="## Upstream Updates Summary
+
+          The following upstream releases were detected:
+
+          ${UPDATE_SUMMARY}
+
+          Individual tool builds and a new kube-essential release have been triggered automatically.
+
+          This issue was automatically created by the upstream release checker."
+
           gh issue create \
             --repo ${{ github.repository }} \
             --title "$ISSUE_TITLE" \
             --body "$ISSUE_BODY" \
             --label "upstream-update,automated"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,176 @@
+name: Build Tool
+
+on:
+  workflow_dispatch:
+    inputs:
+      tool:
+        description: "Tool name (kubectl|helm|jq|skopeo|oras|cosign|flux)"
+        required: true
+        type: choice
+        options:
+          - kubectl
+          - helm
+          - jq
+          - skopeo
+          - oras
+          - cosign
+          - flux
+      version:
+        description: "Upstream version tag (e.g. v1.36.0 or jq-1.8.1)"
+        required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+
+      - name: Build static binary
+        run: |
+          chmod +x scripts/build-tool.sh
+          VERSION="${{ inputs.version }}" bash scripts/build-tool.sh ${{ inputs.tool }}
+
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.tool }}-binary
+          path: static_binaries/${{ inputs.tool }}
+
+  scan:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Download binary artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.tool }}-binary
+          path: static_binaries/
+
+      - name: Install Trivy
+        run: |
+          sudo apt-get install -y wget apt-transport-https gnupg
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | gpg --dearmor | sudo tee /usr/share/keyrings/trivy.gpg > /dev/null
+          echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb noble main" | sudo tee /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update
+          sudo apt-get install -y trivy
+
+      - name: Run Trivy scan
+        run: |
+          trivy fs --format table --severity HIGH,CRITICAL static_binaries/ > trivy-scan-results.txt
+          cat trivy-scan-results.txt
+
+      - name: Upload scan results
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.tool }}-scan-results
+          path: trivy-scan-results.txt
+
+  package:
+    runs-on: ubuntu-latest
+    needs: scan
+    env:
+      PACKAGE_MAINTAINER: "Martin Stadler <martin@sansnom.co>"
+      PACKAGE_URL: "https://github.com/${{ github.repository }}"
+      PACKAGE_VENDOR: "sansnom-co"
+      PACKAGE_LICENSE: "Apache-2.0"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download binary artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.tool }}-binary
+          path: static_binaries/
+
+      - name: Ensure binary is executable
+        run: chmod +x static_binaries/${{ inputs.tool }}
+
+      - name: Install nfpm
+        run: |
+          echo 'deb [trusted=yes] https://repo.goreleaser.com/apt/ /' | sudo tee /etc/apt/sources.list.d/goreleaser.list
+          sudo apt-get update
+          sudo apt-get install -y nfpm
+
+      - name: Normalise version (strip leading v or jq- prefix)
+        id: ver
+        run: |
+          VER="${{ inputs.version }}"
+          VER="${VER#v}"
+          VER="${VER#jq-}"
+          echo "clean=$VER" >> "$GITHUB_OUTPUT"
+
+      - name: Create .deb package
+        run: |
+          mkdir -p packages
+          TOOL_VERSION="${{ steps.ver.outputs.clean }}" \
+            nfpm package -f packaging/${{ inputs.tool }}.yaml --packager deb --target packages/
+
+      - name: Create .rpm package
+        run: |
+          TOOL_VERSION="${{ steps.ver.outputs.clean }}" \
+            nfpm package -f packaging/${{ inputs.tool }}.yaml --packager rpm --target packages/
+
+      - name: Upload packages artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.tool }}-packages
+          path: packages/
+
+  sign-and-release:
+    runs-on: ubuntu-latest
+    needs: package
+    steps:
+      - name: Download packages artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.tool }}-packages
+          path: packages/
+
+      - name: Import GPG key
+        run: |
+          echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
+          gpg --list-secret-keys --fingerprint
+
+      - name: Sign packages
+        run: |
+          cd packages/
+          for file in *.deb *.rpm; do
+            [[ -f "$file" ]] || continue
+            echo "${{ secrets.GPG_PASSPHRASE }}" | \
+              gpg --batch --yes --passphrase-fd 0 --pinentry-mode loopback --detach-sign "$file"
+          done
+
+      - name: Create or update GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ inputs.tool }}-${{ inputs.version }}"
+          NOTES="## ${{ inputs.tool }} ${{ inputs.version }}
+
+          Statically linked build of ${{ inputs.tool }} ${{ inputs.version }}.
+
+          ### Install via APT repo (recommended)
+          \`\`\`bash
+          apt-get install ${{ inputs.tool }}
+          \`\`\`
+
+          ### Direct install
+          \`\`\`bash
+          wget https://github.com/${{ github.repository }}/releases/download/${TAG}/${{ inputs.tool }}_$(echo '${{ inputs.version }}' | sed 's/^[vj][q-]*//')-1_amd64.deb
+          sudo dpkg -i ${{ inputs.tool }}_*.deb
+          \`\`\`"
+
+          if gh release view "$TAG" &>/dev/null; then
+            gh release upload "$TAG" packages/* --clobber
+          else
+            gh release create "$TAG" packages/* \
+              --title "${{ inputs.tool }} ${{ inputs.version }}" \
+              --notes "$NOTES"
+          fi

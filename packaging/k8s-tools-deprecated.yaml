@@ -1,0 +1,19 @@
+# nfpm config for the final deprecation release of k8s-tools.
+# This one-off package transitions existing users to kube-essential via apt upgrade.
+# Required env vars: DEPRECATION_VERSION, PACKAGE_MAINTAINER, PACKAGE_URL, PACKAGE_VENDOR, PACKAGE_LICENSE
+name: k8s-tools
+version: ${DEPRECATION_VERSION}
+release: "1"
+arch: all
+maintainer: ${PACKAGE_MAINTAINER}
+vendor: ${PACKAGE_VENDOR}
+homepage: ${PACKAGE_URL}
+license: ${PACKAGE_LICENSE}
+description: >-
+  DEPRECATED: This package has been superseded by kube-essential.
+  Installing this package will pull in kube-essential, which provides
+  all tools (kubectl, helm, jq, skopeo, oras, cosign, flux) as
+  individually versioned packages.
+depends:
+  - kube-essential
+section: utils

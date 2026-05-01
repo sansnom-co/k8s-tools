@@ -1,0 +1,21 @@
+# nfpm config for cosign package
+# Required env vars: TOOL_VERSION, PACKAGE_MAINTAINER, PACKAGE_URL, PACKAGE_VENDOR, PACKAGE_LICENSE
+name: cosign
+version: ${TOOL_VERSION}
+release: "1"
+arch: amd64
+maintainer: ${PACKAGE_MAINTAINER}
+vendor: ${PACKAGE_VENDOR}
+homepage: ${PACKAGE_URL}
+license: ${PACKAGE_LICENSE}
+description: >-
+  Container signing and verification tool (statically linked).
+  Sign and verify container images using Sigstore.
+depends:
+  - ca-certificates
+section: utils
+contents:
+  - src: static_binaries/cosign
+    dst: /usr/local/bin/cosign
+    file_info:
+      mode: 0755

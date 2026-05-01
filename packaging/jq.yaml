@@ -1,0 +1,19 @@
+# nfpm config for jq package
+# Required env vars: TOOL_VERSION, PACKAGE_MAINTAINER, PACKAGE_URL, PACKAGE_VENDOR, PACKAGE_LICENSE
+name: jq
+version: ${TOOL_VERSION}
+release: "1"
+arch: amd64
+maintainer: ${PACKAGE_MAINTAINER}
+vendor: ${PACKAGE_VENDOR}
+homepage: ${PACKAGE_URL}
+license: ${PACKAGE_LICENSE}
+description: >-
+  Command-line JSON processor (statically linked).
+  jq is like sed for JSON data.
+section: utils
+contents:
+  - src: static_binaries/jq
+    dst: /usr/local/bin/jq
+    file_info:
+      mode: 0755
