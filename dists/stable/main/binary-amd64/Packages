@@ -1,0 +1,54 @@
+Package: kubectl
+Version: 1.36.0-1
+Architecture: amd64
+Maintainer: Martin Stadler <martin@sansnom.co>
+Depends: ca-certificates
+Section: utils
+Priority: optional
+Size: 18021700
+Filename: https://github.com/sansnom-co/k8s-tools/releases/download/kubectl-v1.36.0/kubectl_1.36.0-1_amd64.deb
+Description: Kubernetes command-line tool (statically linked)
+
+Package: helm
+Version: 4.1.4-1
+Architecture: amd64
+Maintainer: Martin Stadler <martin@sansnom.co>
+Depends: ca-certificates
+Section: utils
+Priority: optional
+Size: 19822684
+Filename: https://github.com/sansnom-co/k8s-tools/releases/download/helm-v4.1.4/helm_4.1.4-1_amd64.deb
+Description: The Kubernetes Package Manager (statically linked)
+
+Package: jq
+Version: 1.8.1-1
+Architecture: amd64
+Maintainer: Martin Stadler <martin@sansnom.co>
+Section: utils
+Priority: optional
+Size: 1024606
+Filename: https://github.com/sansnom-co/k8s-tools/releases/download/jq-jq-1.8.1/jq_1.8.1-1_amd64.deb
+Description: Command-line JSON processor (statically linked)
+
+Package: skopeo
+Version: 1.22.2-1
+Architecture: amd64
+Maintainer: Martin Stadler <martin@sansnom.co>
+Depends: ca-certificates
+Section: utils
+Priority: optional
+Size: 11128380
+Filename: https://github.com/sansnom-co/k8s-tools/releases/download/skopeo-v1.22.2/skopeo_1.22.2-1_amd64.deb
+Description: Container image inspection and copying tool (statically linked)
+
+Package: oras
+Version: 1.3.2-1
+Architecture: amd64
+Maintainer: Martin Stadler <martin@sansnom.co>
+Depends: ca-certificates
+Section: utils
+Priority: optional
+Size: 4727972
+Filename: https://github.com/sansnom-co/k8s-tools/releases/download/oras-v1.3.2/oras_1.3.2-1_amd64.deb
+Description: OCI Registry As Storage CLI (statically linked)
+
