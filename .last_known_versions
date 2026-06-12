@@ -1,5 +1,5 @@
-kubectl=v1.36.1
-helm=v4.2.0
+kubectl=v1.36.2
+helm=v4.2.1
 jq=jq-1.8.1
 skopeo=v1.23.0
 oras=v1.3.2
