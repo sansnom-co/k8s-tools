@@ -1,5 +1,5 @@
 kubectl=v1.37.0
-helm=v4.2.4
+helm=v4.3.0
 jq=jq-1.8.2
 skopeo=v1.24.0
 oras=v1.3.4
