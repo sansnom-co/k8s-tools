@@ -1,7 +1,7 @@
 kubectl=v1.37.2
 helm=v4.3.1
 jq=jq-1.8.2
-skopeo=v1.24.1
+skopeo=v1.25.1
 oras=v1.3.6
 cosign=v3.1.4
 flux=v2.10.0
